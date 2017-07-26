@@ -34,6 +34,13 @@ function getOptions (input) {
   return options
 }
 
+function getTagNames (option) {
+  if (Array.isArray(option)) return option
+  if (typeof option === 'string') return [option]
+  if (option == null) return ['html']
+  throw new TypeError(`Expected an array of strings in the "tags" option, got ${typeof option}`)
+}
+
 module.exports = (babel) => {
   const t = babel.types
 
@@ -55,7 +62,10 @@ module.exports = (babel) => {
   return {
     visitor: {
       TaggedTemplateExpression (path) {
-        if (path.get('tag').isIdentifier({ name: 'html' })) {
+        const tag = path.get('tag')
+        const isHtmlTag = getTagNames(this.opts.tags)
+          .some((name) => tag.isIdentifier({ name: name }))
+        if (isHtmlTag) {
           minify(path.get('quasi'), this.opts)
         }
       }
