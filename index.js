@@ -12,26 +12,8 @@ const defaultOptions = {
   decodeEntities: true
 }
 
-const unsafeOptions = {
-  conservativeCollapse: false,
-  removeAttributeQuotes: true,
-  removeOptionalTags: true,
-  removeScriptTypeAttributes: true,
-  removeStyleLinkTypeAttributes: true,
-  removeTagWhitespace: true,
-  sortAttributes: true,
-  sortClassName: true,
-  useShortDoctype: true
-}
-
 function getOptions (input) {
-  const options = {}
-  Object.assign(options, defaultOptions)
-  if (input.unsafe) {
-    Object.assign(options, unsafeOptions)
-  }
-  Object.assign(options, input)
-  return options
+  return Object.assign({}, defaultOptions, input)
 }
 
 function getTagNames (option) {
