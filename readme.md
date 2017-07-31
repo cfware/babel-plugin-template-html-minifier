@@ -35,7 +35,6 @@ With options:
 ## Options
 
 All options are passed through to html-minifier. See the [html-minifier docs](https://github.com/kangax/html-minifier#options-quick-reference).
-Note that, unlike html-minifier, this plugin enables whitespace collapsing by default.
 
 Additional options for the Babel plugin are:
 

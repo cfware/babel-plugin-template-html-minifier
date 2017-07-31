@@ -6,16 +6,6 @@ const htmlMinifier = require('html-minifier')
 const placeholder = '__BABEL HTML MINIFIER PLACEHOLDER$$__'
 const placeholderRx = /__BABEL HTML MINIFIER PLACEHOLDER\$\$__/g
 
-const defaultOptions = {
-  collapseWhitespace: true,
-  conservativeCollapse: true,
-  decodeEntities: true
-}
-
-function getOptions (input) {
-  return Object.assign({}, defaultOptions, input)
-}
-
 function getTagNames (option) {
   if (Array.isArray(option)) return option
   if (typeof option === 'string') return [option]
@@ -31,7 +21,7 @@ module.exports = (babel) => {
     const quasis = node.quasis.map((quasi) => quasi.value.cooked)
 
     const html = quasis.join(placeholder)
-    const minified = htmlMinifier.minify(html, getOptions(options))
+    const minified = htmlMinifier.minify(html, options)
 
     const parts = minified.split(placeholderRx)
     parts.forEach((value, i) => {
