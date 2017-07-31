@@ -6,11 +6,11 @@ const htmlMinifier = require('html-minifier')
 const placeholder = '__BABEL HTML MINIFIER PLACEHOLDER$$__'
 const placeholderRx = /__BABEL HTML MINIFIER PLACEHOLDER\$\$__/g
 
-function getTagNames (option) {
+function getNames (name, option) {
   if (Array.isArray(option)) return option
   if (typeof option === 'string') return [option]
-  if (option == null) return ['html']
-  throw new TypeError(`Expected an array of strings in the "tags" option, got ${typeof option}`)
+  if (option == null) return []
+  throw new TypeError(`Expected an array of strings in the "${name}" option, got ${typeof option}`)
 }
 
 module.exports = (babel) => {
@@ -33,10 +33,38 @@ module.exports = (babel) => {
 
   return {
     visitor: {
+      Program: {
+        enter () {
+          this.bindings = new Set()
+        }
+      },
+      CallExpression (path) {
+        if (!path.parentPath.isVariableDeclarator()) {
+          return
+        }
+        if (path.get('callee').isIdentifier({ name: 'require' })) {
+          const moduleName = path.get('arguments.0')
+          const isHtmlRequire = getNames('modules', this.opts.modules)
+            .some((name) => moduleName.isStringLiteral({ value: name }))
+
+          if (isHtmlRequire) {
+            this.bindings.add(path.parentPath.scope.getBinding(path.parentPath.node.id.name))
+          }
+        }
+      },
+      ImportDeclaration (path) {
+        const moduleName = path.get('source').node.value
+        const isHtmlRequire = getNames('modules', this.opts.modules)
+          .some((name) => moduleName === name)
+        const specifier = path.get('specifiers')[0]
+        if (specifier.isImportDefaultSpecifier()) {
+          this.bindings.add(path.scope.getBinding(specifier.node.local.name))
+        }
+      },
       TaggedTemplateExpression (path) {
         const tag = path.get('tag')
-        const isHtmlTag = getTagNames(this.opts.tags)
-          .some((name) => tag.isIdentifier({ name: name }))
+        const isHtmlTag = getNames('tags', this.opts.tags).some((name) => tag.isIdentifier({ name: name }))
+          || (tag.isIdentifier() && this.bindings.has(path.scope.getBinding(tag.node.name)))
         if (isHtmlTag) {
           minify(path.get('quasi'), this.opts)
         }

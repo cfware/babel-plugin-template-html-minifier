@@ -40,7 +40,7 @@ Additional options for the Babel plugin are:
 
 ### `tags`
 
-An array of template tag identifier names. Defaults to just `html`.
+An array of template tag identifier names.
 
 ```js
 yo`
@@ -66,6 +66,31 @@ multiline`
   not
   html
 `
+```
+
+### `modules`
+
+An array of modules that export a template tag.
+
+```js
+import bel from 'bel'
+var yo = require('yo-yo')
+bel`<div class="hello"> Hello World </div>`
+yo`
+  <div>
+    <p>a</p>
+    <p>b</p>
+  </div>
+`
+```
+
+With `"modules": ["bel", "yo-yo"]` becomes:
+
+```js
+import bel from 'bel';
+var yo = require('yo-yo');
+bel`<div class=hello>Hello World</div>`;
+yo`<div><p>a<p>b</div>`;
 ```
 
 ## License
