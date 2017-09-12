@@ -63,3 +63,15 @@ test('minifies tags from listed modules only', (t) => {
   t.equal(result, read('fixtures/modules.expected.js'))
   t.end()
 })
+
+test('works with template values', (t) => {
+  const result = transform(read('fixtures/values.js'), {
+    modules: ['choo/html'],
+    collapseWhitespace: true,
+    conservativeCollapse: false,
+    removeAttributeQuotes: true
+  })
+
+  t.equal(result, read('fixtures/values.expected.js'))
+  t.end()
+})
