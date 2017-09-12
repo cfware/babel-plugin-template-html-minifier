@@ -1,7 +1,7 @@
 {
   "name": "babel-plugin-template-html-minifier",
   "description": "Minify HTML in tagged template strings using html-minifier",
-  "version": "0.0.0",
+  "version": "1.0.0",
   "main": "index.js",
   "scripts": {
     "test": "tape test/test.js"
