@@ -15,18 +15,15 @@ In `.babelrc`:
 ```json
 {
   "plugins": [
-    "template-html-minifier"
-  ]
-}
-```
-
-With options:
-
-```json
-{
-  "plugins": [
     ["template-html-minifier", {
-      "tags": ["bel"]
+      "modules": {
+        "lit-html": ["html"],
+        "@polymer/lit-element": ["html"],
+        "choo/html": [null]
+      },
+      "htmlMinifier": {
+        "collapseWhitespace": true
+      }
     }]
   ]
 }
@@ -34,64 +31,91 @@ With options:
 
 ## Options
 
-All options are passed through to html-minifier. See the [html-minifier docs](https://github.com/kangax/html-minifier#options-quick-reference).
+### `htmlMinifier`
 
-Additional options for the Babel plugin are:
+The value of this property is passed unmodified to html-minifier. See the
+[html-minifier docs](https://github.com/kangax/html-minifier#options-quick-reference).
 
-### `tags`
-
-An array of template tag identifier names.
-
-```js
-yo`
-  <div class="hello">
-    Hello World
-  </div>
-`
-multiline`
-  This
-  is
-  not
-  html
-`
-```
-
-With `"tags": ["yo"]` becomes:
+Note `collapseBooleanAttributes` should not be used when working with `lit-html`
+or other templating systems which give special meaning to non-static boolean
+attributes.  Enabling `collapseBooleanAttributes` will cause this plugin to
+throw an exception:
 
 ```js
-yo`<div class="hello"> Hello World </div>`
-multiline`
-  This
-  is
-  not
-  html
-`
+html`<input readonly="${readonly}">`;
 ```
+
+This exception is for two reasons.  First because it means the chosen options have
+caused `html-minifier` to change the meaning of the HTML template.  Second because
+it deletes the point where `${readonly}` goes into the final output.
 
 ### `modules`
 
-An array of modules that export a template tag.
+A list of module names or import paths where tags are imported from.  The values in
+the arrays refers to the export names, not the import names.  `null` refers to the
+default export.
 
 ```js
-import bel from 'bel'
-var yo = require('yo-yo')
-bel`<div class="hello"> Hello World </div>`
-yo`
-  <div>
-    <p>a</p>
-    <p>b</p>
+import choo from 'choo/html';
+import * as lit from 'lit-html';
+import {html as litHtml} from '@polymer/lit-element';
+import html from 'some-module';
+
+choo`
+  <div class="hello">
+    Hello World
   </div>
-`
+`;
+
+lit.html`
+  <div class="hello">
+    Hello World
+  </div>
+`;
+
+litHtml`
+  <div class="hello">
+    Hello World
+  </div>
+`;
+
+html`
+  This
+  is
+  not
+  processed
+`;
 ```
 
-With `"modules": ["bel", "yo-yo"]` becomes:
+Using the .babelrc shown in [#Usage] produces the following output:
 
 ```js
-import bel from 'bel';
-var yo = require('yo-yo');
-bel`<div class=hello>Hello World</div>`;
-yo`<div><p>a<p>b</div>`;
+import choo from 'choo/html';
+import * as lit from 'lit-html';
+import {html as litHtml} from '@polymer/lit-element';
+import html from 'some-module';
+
+choo`<div class="hello"> Hello World </div>`;
+
+lit.html`<div class="hello"> Hello World </div>`;
+
+litHtml`<div class="hello"> Hello World </div>`;
+
+html`
+  This
+  is
+  not
+  processed
+`;
 ```
+
+* choo is processed because of `"choo/html": [null]` specifies that the default
+export should be processed.
+* lit.html is processed because `"lit-html": ["html"]`.
+* litHtml is processed because `"@polymer/lit-element": ["html"]`.
+* html is not processed because it was exported from an unlisted module.
+
+All matching is done based on the exported name, not the local/imported name.
 
 ## License
 
