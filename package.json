@@ -1,27 +1,31 @@
 {
-  "name": "babel-plugin-template-html-minifier",
-  "description": "Minify HTML in tagged template strings using html-minifier",
-  "version": "1.0.0",
-  "main": "index.js",
-  "scripts": {
-    "test": "tape test/test.js"
-  },
-  "repository": {
-    "type": "git",
-    "url": "git+https://github.com/goto-bus-stop/babel-plugin-template-html-minifier.git"
-  },
-  "keywords": [],
-  "author": "",
-  "license": "MIT",
-  "bugs": {
-    "url": "https://github.com/goto-bus-stop/babel-plugin-template-html-minifier/issues"
-  },
-  "homepage": "https://github.com/goto-bus-stop/babel-plugin-template-html-minifier#readme",
-  "dependencies": {
-    "html-minifier": "^3.5.3"
-  },
-  "devDependencies": {
-    "babel-core": "^6.25.0",
-    "tape": "^4.7.0"
-  }
+	"name": "babel-plugin-template-html-minifier",
+	"description": "Minify HTML in tagged template strings using html-minifier",
+	"version": "1.0.0",
+	"main": "index.js",
+	"scripts": {
+		"test": "xo && nyc ava"
+	},
+	"repository": {
+		"type": "git",
+		"url": "git+https://github.com/goto-bus-stop/babel-plugin-template-html-minifier.git"
+	},
+	"keywords": [],
+	"author": "",
+	"license": "MIT",
+	"bugs": {
+		"url": "https://github.com/goto-bus-stop/babel-plugin-template-html-minifier/issues"
+	},
+	"homepage": "https://github.com/goto-bus-stop/babel-plugin-template-html-minifier#readme",
+	"dependencies": {
+		"html-minifier": "^3.5.3"
+	},
+	"devDependencies": {
+		"@babel/core": "^7.0.0-beta.49",
+		"@polymer/lit-element": "^0.5.1",
+		"ava": "^1.0.0-beta.4",
+		"lit-html": "^0.10.0",
+		"nyc": "^11.8.0",
+		"xo": "^0.21.1"
+	}
 }
