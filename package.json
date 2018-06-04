@@ -10,7 +10,12 @@
 		"type": "git",
 		"url": "git+https://github.com/goto-bus-stop/babel-plugin-template-html-minifier.git"
 	},
-	"keywords": [],
+	"keywords": [
+		"babel",
+		"lit-html",
+		"choo",
+		"html-minifier"
+	],
 	"author": "",
 	"license": "MIT",
 	"bugs": {
