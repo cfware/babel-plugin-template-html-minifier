@@ -1,4 +1,5 @@
 const htmlMinifier = require('html-minifier');
+const isBuiltinModule = require('is-builtin-module');
 
 const moduleMains = {};
 
@@ -21,6 +22,12 @@ function getPkgMain(importOwner) {
 }
 
 function bareName(importSource) {
+	if (isBuiltinModule(importSource)) {
+		/* Don't rule out possibility that a built-in module could provide an html tag
+		 * but also avoid any additional processing of the module name. */
+		return importSource;
+	}
+
 	const importOwner = ownerName(importSource);
 	const pkgMain = getPkgMain(importOwner);
 

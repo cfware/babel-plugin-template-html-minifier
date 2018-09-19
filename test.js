@@ -208,8 +208,8 @@ html${tickComment};`,
 }));
 
 test('ignore basic calls', t => babelTest(t, {
-	source: `console.log('hello');`,
-	result: `console.log('hello');`
+	source: 'console.log(\'hello\');',
+	result: 'console.log(\'hello\');'
 }));
 
 test('default require', t => babelTest(t, {
@@ -332,5 +332,15 @@ html${tickSpan};`,
 			'choo/html': [null]
 		},
 		htmlMinifier: defaultHtmlMin
+	}
+}));
+
+test('tolerate built-in modules', t => babelTest(t, {
+	source: 'const fs = require(\'fs\');',
+	result: 'const fs = require(\'fs\');',
+	pluginOptions: {
+		modules: {
+			'choo/html': [null]
+		}
 	}
 }));
