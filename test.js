@@ -344,3 +344,13 @@ test('tolerate built-in modules', t => babelTest(t, {
 		}
 	}
 }));
+
+test('ignore unknown modules', t => babelTest(t, {
+	source: 'const unknown = require(\'unknown-module\');',
+	result: 'const unknown = require(\'unknown-module\');',
+	pluginOptions: {
+		modules: {
+			'choo/html': [null]
+		}
+	}
+}));
