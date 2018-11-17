@@ -87,7 +87,7 @@ html`
 `;
 ```
 
-Using the .babelrc shown in [#Usage] produces the following output:
+Using the .babelrc shown in [usage](#Usage) produces the following output:
 
 ```js
 import choo from 'choo/html';

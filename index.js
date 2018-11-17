@@ -47,7 +47,11 @@ function getModuleConfig(options, importSource) {
 		return options.modules[importSource];
 	}
 
-	return options.modules[bareName(importSource)];
+	try {
+		return options.modules[bareName(importSource)];
+	} catch (error) {
+		return null;
+	}
 }
 
 const majorDeleteError = 'html-minifier deleted something major, cannot proceed.';
