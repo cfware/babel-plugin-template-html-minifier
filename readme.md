@@ -1,5 +1,10 @@
 # babel-plugin-template-html-minifier
 
+[![Travis CI][travis-image]][travis-url]
+[![NPM Version][npm-image]][npm-url]
+[![NPM Downloads][downloads-image]][downloads-url]
+[![MIT][license-image]](LICENSE)
+
 Minify HTML in tagged template strings using [html-minifier](https://github.com/kangax/html-minifier).
 
 ## Install
@@ -19,7 +24,8 @@ In `.babelrc`:
       "modules": {
         "lit-html": ["html"],
         "@polymer/lit-element": ["html"],
-        "choo/html": [null]
+        "choo/html": [null],
+        "hyperhtml-element": [{"name": null, "member": "html"}]
       },
       "htmlMinifier": {
         "collapseWhitespace": true
@@ -59,6 +65,7 @@ default export.
 import choo from 'choo/html';
 import * as lit from 'lit-html';
 import {html as litHtml} from '@polymer/lit-element';
+import HyperHTMLElement from 'hyperhtml-element';
 import html from 'some-module';
 
 choo`
@@ -79,6 +86,20 @@ litHtml`
   </div>
 `;
 
+class MyHyperHTMLElement extends HyperHTMLElement {
+  created() {
+    this.render();
+  }
+
+  render() {
+    this.html`
+      <div>
+        Hello World
+      </div>
+    `;
+  }
+}
+
 html`
   This
   is
@@ -93,6 +114,7 @@ Using the .babelrc shown in [usage](#Usage) produces the following output:
 import choo from 'choo/html';
 import * as lit from 'lit-html';
 import {html as litHtml} from '@polymer/lit-element';
+import HyperHTMLElement from 'hyperhtml-element';
 import html from 'some-module';
 
 choo`<div class="hello"> Hello World </div>`;
@@ -100,6 +122,16 @@ choo`<div class="hello"> Hello World </div>`;
 lit.html`<div class="hello"> Hello World </div>`;
 
 litHtml`<div class="hello"> Hello World </div>`;
+
+class MyHyperHTMLElement extends HyperHTMLElement {
+  created() {
+    this.render();
+  }
+
+  render() {
+    this.html`<div> Hello World </div>`;
+  }
+}
 
 html`
   This
@@ -113,10 +145,32 @@ html`
 export should be processed.
 * lit.html is processed because `"lit-html": ["html"]`.
 * litHtml is processed because `"@polymer/lit-element": ["html"]`.
+* `this.html` in MyHyperHTMLElement is processed because
+`"hyperhtml-element": [{"name": null, "member": "html"}]` specifies that the `html` member
+of classes which extend the default export should be processed.
 * html is not processed because it was exported from an unlisted module.
 
 All matching is done based on the exported name, not the local/imported name.
 
-## License
+## Running tests
 
-[MIT](./LICENSE)
+Tests are provided by xo and ava.
+
+```sh
+npm install
+npm test
+```
+
+## Attribution
+
+This module was originally created by [goto-bus-stop](https://github.com/goto-bus-stop).
+
+
+[npm-image]: https://img.shields.io/npm/v/babel-plugin-template-html-minifier.svg
+[npm-url]: https://npmjs.org/package/babel-plugin-template-html-minifier
+[travis-image]: https://travis-ci.org/cfware/babel-plugin-template-html-minifier.svg?branch=master
+[travis-url]: https://travis-ci.org/cfware/babel-plugin-template-html-minifier
+[downloads-image]: https://img.shields.io/npm/dm/babel-plugin-template-html-minifier.svg
+[downloads-url]: https://npmjs.org/package/babel-plugin-template-html-minifier
+[license-image]: https://img.shields.io/npm/l/babel-plugin-template-html-minifier.svg
+

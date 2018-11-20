@@ -87,8 +87,10 @@ module.exports = babel => {
 		visitor: {
 			Program: {
 				enter() {
-					this.starImports = {};
 					this.bindings = new Set();
+					this.classBindings = new Set();
+					this.starImports = {};
+					this.classes = [];
 				}
 			},
 			CallExpression(path) {
@@ -110,19 +112,34 @@ module.exports = babel => {
 					}
 
 					const idPath = path.parentPath.get('id');
+					const namedClasses = moduleConfig.filter(item => item !== null && typeof item === 'object' && typeof item.name === 'string');
 					if (idPath.isIdentifier()) {
+						const defaultClasses = moduleConfig.filter(item => item !== null && typeof item === 'object' && item.name === null);
+						const binding = path.parentPath.scope.getBinding(idPath.node.name);
 						if (moduleConfig.includes(null)) {
-							this.bindings.add(path.parentPath.scope.getBinding(idPath.node.name));
+							this.bindings.add(binding);
+						} else if (defaultClasses.length > 0) {
+							this.classes.push({
+								member: defaultClasses[0].member,
+								binding
+							});
 						} else {
 							this.starImports[idPath.node.name] = {
-								binding: path.parentPath.scope.getBinding(idPath.node.name),
-								properties: moduleConfig.filter(name => typeof name === 'string')
+								binding,
+								properties: moduleConfig.filter(item => typeof item === 'string'),
+								namedClasses
 							};
 						}
 					} else if (idPath.isObjectPattern()) {
 						idPath.node.properties.forEach(prop => {
+							const binding = path.scope.getBinding(prop.value.name);
 							if (moduleConfig.includes(prop.key.name)) {
-								this.bindings.add(path.scope.getBinding(prop.value.name));
+								this.bindings.add(binding);
+							} else if (namedClasses.some(item => item.name === prop.key.name)) {
+								this.classes.push({
+									member: namedClasses[0].member,
+									binding
+								});
 							}
 						});
 					}
@@ -136,19 +153,38 @@ module.exports = babel => {
 					return;
 				}
 
+				const namedClasses = moduleConfig.filter(item => item !== null && typeof item === 'object' && typeof item.name === 'string');
 				path.get('specifiers').forEach(spec => {
+					const binding = path.scope.getBinding(spec.node.local.name);
 					if (spec.isImportNamespaceSpecifier()) {
 						this.starImports[spec.node.local.name] = {
-							binding: path.scope.getBinding(spec.node.local.name),
-							properties: moduleConfig.filter(name => typeof name === 'string')
+							binding,
+							properties: moduleConfig.filter(item => typeof item === 'string'),
+							namedClasses
 						};
 						return;
 					}
 
-					const importedName = spec.isImportDefaultSpecifier() ? null : spec.node.imported.name;
-
-					if (moduleConfig.includes(importedName)) {
-						this.bindings.add(path.scope.getBinding(spec.node.local.name));
+					if (spec.isImportDefaultSpecifier()) {
+						const defaultClasses = moduleConfig.filter(item => item !== null && typeof item === 'object' && item.name === null);
+						if (moduleConfig.includes(null)) {
+							this.bindings.add(binding);
+						} else if (defaultClasses.length > 0) {
+							this.classes.push({
+								member: defaultClasses[0].member,
+								binding
+							});
+						}
+					} else if (moduleConfig.includes(spec.node.imported.name)) {
+						this.bindings.add(binding);
+					} else {
+						const matchingNames = namedClasses.filter(item => item.name === spec.node.imported.name);
+						if (matchingNames.length > 0) {
+							this.classes.push({
+								member: matchingNames[0].member,
+								binding
+							});
+						}
 					}
 				});
 			},
@@ -156,13 +192,38 @@ module.exports = babel => {
 				const tag = path.get('tag');
 
 				if (tag.isMemberExpression()) {
-					const objName = tag.node.object.name;
 					const propName = tag.node.property.name;
+
+					if (tag.get('object').isThisExpression()) {
+						const cls = path.findParent(path => path.isClassDeclaration());
+						if (!cls || !cls.node.superClass) {
+							return;
+						}
+
+						const {superClass} = cls.node;
+						if (cls.get('superClass').isIdentifier()) {
+							if (this.classes.some(item => item.binding === cls.scope.getBinding(superClass.name) && item.member === propName)) {
+								minify(path.get('quasi'), this.opts.htmlMinifier);
+							}
+						} else {
+							const objName = superClass.object.name;
+							const starImport = this.starImports[objName];
+							if (starImport && starImport.binding === path.scope.getBinding(objName) && starImport.namedClasses.some(item => item.member === propName && superClass.property.name === item.name)) {
+								minify(path.get('quasi'), this.opts.htmlMinifier);
+							}
+						}
+						return;
+					}
+
+					const objName = tag.node.object.name;
 					const starImport = this.starImports[objName];
 					if (starImport && starImport.binding === path.scope.getBinding(objName) && starImport.properties.includes(propName)) {
 						minify(path.get('quasi'), this.opts.htmlMinifier);
 					}
+
+					return;
 				}
+
 				if (tag.isIdentifier() && this.bindings.has(path.scope.getBinding(tag.node.name))) {
 					minify(path.get('quasi'), this.opts.htmlMinifier);
 				}

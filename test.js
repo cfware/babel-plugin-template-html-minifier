@@ -307,10 +307,197 @@ test('tolerate built-in modules', t => babelTest(t, {
 
 test('ignore unknown modules', t => babelTest(t, {
 	source: 'const unknown = require(\'unknown-module\');',
-	result: 'const unknown = require(\'unknown-module\');',
+	result: 'const unknown=require(\'unknown-module\');',
 	pluginOptions: {
 		modules: {
 			'choo/html': [null]
 		}
+	}
+}));
+
+test('require member class of default export', t => babelTest(t, {
+	source: 'const base = require(\'hyperhtml-element\');class ele extends base {render(){this.html`<div >test</div>`;this.nothtml`<div >test</div>`;}}',
+	result: 'const base=require(\'hyperhtml-element\');class ele extends base{render(){this.html`<div>test</div>`;this.nothtml`<div >test</div>`;}}',
+	pluginOptions: {
+		modules: {
+			'hyperhtml-element': [
+				{
+					name: null,
+					member: 'html'
+				}
+			]
+		}
+	}
+}));
+
+test('import member class of default export', t => babelTest(t, {
+	source: 'import base from \'hyperhtml-element\';class ele extends base {render(){this.html`<div >test</div>`;}}',
+	result: 'import base from\'hyperhtml-element\';class ele extends base{render(){this.html`<div>test</div>`;}}',
+	pluginOptions: {
+		modules: {
+			'hyperhtml-element': [
+				{
+					name: null,
+					member: 'html'
+				}
+			]
+		}
+	}
+}));
+
+test('require member class of unwanted default export', t => babelTest(t, {
+	source: 'const base = require(\'hyperhtml-element\');class ele extends base {render(){this.html`<div >test</div>`;}}',
+	result: 'const base=require(\'hyperhtml-element\');class ele extends base{render(){this.html`<div >test</div>`;}}',
+	pluginOptions: {
+		modules: {
+			'hyperhtml-element': [
+				{
+					name: 'base',
+					member: 'html'
+				}
+			]
+		}
+	}
+}));
+
+test('import member class of unwanted default export', t => babelTest(t, {
+	source: 'import base from \'hyperhtml-element\';class ele extends base {render(){this.html`<div >test</div>`;}}',
+	result: 'import base from\'hyperhtml-element\';class ele extends base{render(){this.html`<div >test</div>`;}}',
+	pluginOptions: {
+		modules: {
+			'hyperhtml-element': [
+				{
+					name: 'base',
+					member: 'html'
+				}
+			]
+		}
+	}
+}));
+
+test('import member class of default export from non-matching module', t => babelTest(t, {
+	source: 'import base from \'hyperhtml-element\';class ele extends base {render(){this.html`<div >test</div>`;}}',
+	result: 'import base from\'hyperhtml-element\';class ele extends base{render(){this.html`<div >test</div>`;}}',
+	pluginOptions: {
+		modules: {
+			'wrong-element': [
+				{
+					name: null,
+					member: 'html'
+				}
+			]
+		}
+	}
+}));
+
+test('require member class of named export', t => babelTest(t, {
+	source: 'const {base} = require(\'hyperhtml-element\');class ele extends base {render(){this.html`<div >test</div>`;}}',
+	result: 'const{base}=require(\'hyperhtml-element\');class ele extends base{render(){this.html`<div>test</div>`;}}',
+	pluginOptions: {
+		modules: {
+			'hyperhtml-element': [
+				{
+					name: 'base',
+					member: 'html'
+				}
+			]
+		}
+	}
+}));
+
+test('import member class of named export', t => babelTest(t, {
+	source: 'import {base} from \'hyperhtml-element\';class ele extends base {render(){this.html`<div >test</div>`;}}',
+	result: 'import{base}from\'hyperhtml-element\';class ele extends base{render(){this.html`<div>test</div>`;}}',
+	pluginOptions: {
+		modules: {
+			'hyperhtml-element': [
+				{
+					name: 'base',
+					member: 'html'
+				}
+			]
+		}
+	}
+}));
+
+test('require member class of non-matching named export', t => babelTest(t, {
+	source: 'const {base} = require(\'hyperhtml-element\');class ele extends base {render(){this.html`<div >test</div>`;}}',
+	result: 'const{base}=require(\'hyperhtml-element\');class ele extends base{render(){this.html`<div >test</div>`;}}',
+	pluginOptions: {
+		modules: {
+			'hyperhtml-element': [
+				{
+					name: 'child',
+					member: 'html'
+				}
+			]
+		}
+	}
+}));
+
+test('import member class of non-matching named export', t => babelTest(t, {
+	source: 'import {base} from \'hyperhtml-element\';class ele extends base {render(){this.html`<div >test</div>`;}}',
+	result: 'import{base}from\'hyperhtml-element\';class ele extends base{render(){this.html`<div >test</div>`;}}',
+	pluginOptions: {
+		modules: {
+			'hyperhtml-element': [
+				{
+					name: 'child',
+					member: 'html'
+				}
+			]
+		}
+	}
+}));
+
+test('require member class of star', t => babelTest(t, {
+	source: 'const elements = require(\'my-elements\');class ele extends elements.base {render(){this.html`<div >test</div>`;}}',
+	result: 'const elements=require(\'my-elements\');class ele extends elements.base{render(){this.html`<div>test</div>`;}}',
+	pluginOptions: {
+		modules: {
+			'my-elements': [
+				{
+					name: 'base',
+					member: 'html'
+				}
+			]
+		}
+	}
+}));
+
+test('import member class of star', t => babelTest(t, {
+	source: 'import * as elements from \'my-elements\';class ele extends elements.base {render(){this.html`<div >test</div>`;}}',
+	result: 'import*as elements from\'my-elements\';class ele extends elements.base{render(){this.html`<div>test</div>`;}}',
+	pluginOptions: {
+		modules: {
+			'my-elements': [
+				{
+					name: 'base',
+					member: 'html'
+				}
+			]
+		}
+	}
+}));
+
+test('import member class of star from non-matching module', t => babelTest(t, {
+	source: 'import * as elements from \'hyperhtml-element\';class ele extends elements.base {render(){this.html`<div >test</div>`;}}',
+	result: 'import*as elements from\'hyperhtml-element\';class ele extends elements.base{render(){this.html`<div >test</div>`;}}',
+	pluginOptions: {
+		modules: {
+			'wrong-element': [
+				{
+					name: null,
+					member: 'html'
+				}
+			]
+		}
+	}
+}));
+
+test('ignore this outside class', t => babelTest(t, {
+	source: 'function test() { this.html``; }',
+	result: 'function test(){this.html``;}',
+	pluginOptions: {
 	}
 }));
