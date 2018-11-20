@@ -8,9 +8,9 @@ function babelTest(t, options) {
 	const {exception, source, result, pluginOptions} = options;
 
 	if (exception) {
-		t.throws(() => transform(source, {plugins: [[plugin, pluginOptions]]}), exception);
+		t.throws(() => transform(source, {compact: true, plugins: [[plugin, pluginOptions]]}), exception);
 	} else {
-		const {code} = transform(source, {plugins: [[plugin, pluginOptions]]});
+		const {code} = transform(source, {compact: true, plugins: [[plugin, pluginOptions]]});
 
 		t.is(code, result);
 	}
@@ -32,15 +32,13 @@ const tickComment = '`<!-- Comment with variable ${myclass} -->`';
 test('do nothing', t => babelTest(t, {
 	source: `import {html} from 'lit-html';
 html${tickSpan};`,
-	result: `import { html } from 'lit-html';
-html${tickSpan};`
+	result: `import{html}from'lit-html';html${tickSpan};`
 }));
 
 test('default import', t => babelTest(t, {
 	source: `import html from 'choo/html';
 html${tickSpan};`,
-	result: `import html from 'choo/html';
-html${tickSpanTrimmed};`,
+	result: `import html from'choo/html';html${tickSpanTrimmed};`,
 	pluginOptions: {
 		modules: {
 			'choo/html': [null]
@@ -52,8 +50,7 @@ html${tickSpanTrimmed};`,
 test('named import', t => babelTest(t, {
 	source: `import {html, render} from 'lit-html';
 html${tickSpan};`,
-	result: `import { html, render } from 'lit-html';
-html${tickSpanTrimmed};`,
+	result: `import{html,render}from'lit-html';html${tickSpanTrimmed};`,
 	pluginOptions: {
 		modules: {
 			'lit-html': ['html']
@@ -68,11 +65,7 @@ lit.html${tickSpan};
 lit.nothtml${tickSpan};
 lit.sub.html${tickSpan};
 html${tickSpan};`,
-	result: `import * as lit from 'lit-html';
-lit.html${tickSpanTrimmed};
-lit.nothtml${tickSpan};
-lit.sub.html${tickSpan};
-html${tickSpan};`,
+	result: `import*as lit from'lit-html';lit.html${tickSpanTrimmed};lit.nothtml${tickSpan};lit.sub.html${tickSpan};html${tickSpan};`,
 	pluginOptions: {
 		modules: {
 			'lit-html': ['html']
@@ -84,8 +77,7 @@ html${tickSpan};`,
 test('templated boolean attribute', t => babelTest(t, {
 	source: `import {html} from 'lit-html';
 html${tickSpan2};`,
-	result: `import { html } from 'lit-html';
-html${tickSpan2Trimmed};`,
+	result: `import{html}from'lit-html';html${tickSpan2Trimmed};`,
 	pluginOptions: {
 		modules: {
 			'lit-html': ['html']
@@ -97,8 +89,7 @@ html${tickSpan2Trimmed};`,
 test('import of main module file by path specified in package.json', t => babelTest(t, {
 	source: `import {html, render} from 'lit-html/${litHtmlMain}';
 html${tickSpan};`,
-	result: `import { html, render } from 'lit-html/${litHtmlMain}';
-html${tickSpanTrimmed};`,
+	result: `import{html,render}from'lit-html/${litHtmlMain}';html${tickSpanTrimmed};`,
 	pluginOptions: {
 		modules: {
 			'lit-html': ['html']
@@ -110,8 +101,7 @@ html${tickSpanTrimmed};`,
 test('import of main scoped module file by path specified in package.json', t => babelTest(t, {
 	source: `import {html, render} from '@polymer/lit-element/${litElementMain}';
 html${tickSpan};`,
-	result: `import { html, render } from '@polymer/lit-element/${litElementMain}';
-html${tickSpanTrimmed};`,
+	result: `import{html,render}from'@polymer/lit-element/${litElementMain}';html${tickSpanTrimmed};`,
 	pluginOptions: {
 		modules: {
 			'@polymer/lit-element': ['html']
@@ -123,8 +113,7 @@ html${tickSpanTrimmed};`,
 test('non-main module file is ignored', t => babelTest(t, {
 	source: `import {html, render} from 'lit-html/lib/lit-extended.js';
 html${tickSpan};`,
-	result: `import { html, render } from 'lit-html/lib/lit-extended.js';
-html${tickSpan};`,
+	result: `import{html,render}from'lit-html/lib/lit-extended.js';html${tickSpan};`,
 	pluginOptions: {
 		modules: {
 			'lit-html': ['html']
@@ -136,8 +125,7 @@ html${tickSpan};`,
 test('requested non-main module file is processed', t => babelTest(t, {
 	source: `import {html, render} from 'lit-html/lib/lit-extended.js';
 html${tickSpan};`,
-	result: `import { html, render } from 'lit-html/lib/lit-extended.js';
-html${tickSpanTrimmed};`,
+	result: `import{html,render}from'lit-html/lib/lit-extended.js';html${tickSpanTrimmed};`,
 	pluginOptions: {
 		modules: {
 			'lit-html/lib/lit-extended.js': ['html']
@@ -150,9 +138,7 @@ test('renamed import', t => babelTest(t, {
 	source: `import {html as litHtml, render as html} from 'lit-html';
 litHtml${tickSpan};
 html${tickSpan};`,
-	result: `import { html as litHtml, render as html } from 'lit-html';
-litHtml${tickSpanTrimmed};
-html${tickSpan};`,
+	result: `import{html as litHtml,render as html}from'lit-html';litHtml${tickSpanTrimmed};html${tickSpan};`,
 	pluginOptions: {
 		modules: {
 			'lit-html': ['html']
@@ -164,8 +150,7 @@ html${tickSpan};`,
 test('collapseBooleanAttributes with no dynamic boolean attributes', t => babelTest(t, {
 	source: `import {html} from 'lit-html';
 html${tickSpan};`,
-	result: `import { html } from 'lit-html';
-html${tickSpanTrimmedBoolean};`,
+	result: `import{html}from'lit-html';html${tickSpanTrimmedBoolean};`,
 	pluginOptions: {
 		modules: {
 			'lit-html': ['html']
@@ -215,9 +200,7 @@ test('ignore basic calls', t => babelTest(t, {
 test('default require', t => babelTest(t, {
 	source: `const html = require('choo/html');
 html${tickSpan};`,
-	result: `const html = require('choo/html');
-
-html${tickSpanTrimmed};`,
+	result: `const html=require('choo/html');html${tickSpanTrimmed};`,
 	pluginOptions: {
 		modules: {
 			'choo/html': [null]
@@ -230,10 +213,7 @@ test('require all from module with properties', t => babelTest(t, {
 	source: `const lit = require('lit-html');
 lit.html${tickSpan};
 lit.render${tickSpan};`,
-	result: `const lit = require('lit-html');
-
-lit.html${tickSpanTrimmed};
-lit.render${tickSpan};`,
+	result: `const lit=require('lit-html');lit.html${tickSpanTrimmed};lit.render${tickSpan};`,
 	pluginOptions: {
 		modules: {
 			'lit-html': ['html']
@@ -245,12 +225,7 @@ lit.render${tickSpan};`,
 test('named require', t => babelTest(t, {
 	source: `const {html, render} = require('lit-html');
 html${tickSpan};`,
-	result: `const {
-  html,
-  render
-} = require('lit-html');
-
-html${tickSpanTrimmed};`,
+	result: `const{html,render}=require('lit-html');html${tickSpanTrimmed};`,
 	pluginOptions: {
 		modules: {
 			'lit-html': ['html']
@@ -263,13 +238,7 @@ test('renamed requires', t => babelTest(t, {
 	source: `const {html: litHtml, render: html} = require('lit-html');
 litHtml${tickSpan};
 html${tickSpan};`,
-	result: `const {
-  html: litHtml,
-  render: html
-} = require('lit-html');
-
-litHtml${tickSpanTrimmed};
-html${tickSpan};`,
+	result: `const{html:litHtml,render:html}=require('lit-html');litHtml${tickSpanTrimmed};html${tickSpan};`,
 	pluginOptions: {
 		modules: {
 			'lit-html': ['html']
@@ -281,9 +250,7 @@ html${tickSpan};`,
 test('ignore array destructure require', t => babelTest(t, {
 	source: `const [html] = require('lit-html');
 html${tickSpan};`,
-	result: `const [html] = require('lit-html');
-
-html${tickSpan};`,
+	result: `const[html]=require('lit-html');html${tickSpan};`,
 	pluginOptions: {
 		modules: {
 			'lit-html': ['html']
@@ -295,24 +262,19 @@ html${tickSpan};`,
 test('ignore invalid require', t => babelTest(t, {
 	source: `const html = require(true);
 html${tickSpan};`,
-	result: `const html = require(true);
-
-html${tickSpan};`
+	result: `const html=require(true);html${tickSpan};`
 }));
 
 test('ignore require of unwanted module', t => babelTest(t, {
 	source: `const html = require('lit-html');
 html${tickSpan};`,
-	result: `const html = require('lit-html');
-
-html${tickSpan};`
+	result: `const html=require('lit-html');html${tickSpan};`
 }));
 
 test('ignore calls that are not require', t => babelTest(t, {
 	source: `const html = notrequire('choo/html');
 html${tickSpan};`,
-	result: `const html = notrequire('choo/html');
-html${tickSpan};`,
+	result: `const html=notrequire('choo/html');html${tickSpan};`,
 	pluginOptions: {
 		modules: {
 			'choo/html': [null]
@@ -324,9 +286,7 @@ html${tickSpan};`,
 test('ignore calls that are obj.require', t => babelTest(t, {
 	source: `const html = obj.require('choo/html');
 html${tickSpan};`,
-	result: `const html = obj.require('choo/html');
-
-html${tickSpan};`,
+	result: `const html=obj.require('choo/html');html${tickSpan};`,
 	pluginOptions: {
 		modules: {
 			'choo/html': [null]
@@ -337,7 +297,7 @@ html${tickSpan};`,
 
 test('tolerate built-in modules', t => babelTest(t, {
 	source: 'const fs = require(\'fs\');',
-	result: 'const fs = require(\'fs\');',
+	result: 'const fs=require(\'fs\');',
 	pluginOptions: {
 		modules: {
 			'choo/html': [null]
