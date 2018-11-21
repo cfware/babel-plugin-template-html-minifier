@@ -17,7 +17,10 @@ function babelTest(t, options) {
 }
 
 const defaultHtmlMin = {
-	collapseWhitespace: true
+	collapseWhitespace: true,
+	removeComments: true,
+	minifyCSS: {level: 2},
+	minifyJS: true
 };
 
 /* eslint-disable no-template-curly-in-string */
@@ -26,6 +29,10 @@ const tickSpanTrimmed = '`<span class="${myclass}" disabled="disabled">test</spa
 const tickSpanTrimmedBoolean = '`<span class="${myclass}" disabled>test</span>`';
 const tickSpan2 = '`<span class="${classes}" readonly="readonly" disabled="${disabled}" >test</span>`';
 const tickSpan2Trimmed = '`<span class="${classes}" readonly="readonly" disabled="${disabled}">test</span>`';
+const tickSpan3 = '`<span style="${style}" >test</span>`';
+const tickSpan3Trimmed = '`<span style="${style}">test</span>`';
+const tickSpan4 = '`<span onclick=${() => console.log(\'click\')} >test</span>`';
+const tickSpan4Trimmed = '`<span onclick=${()=>console.log(\'click\')}>test</span>`';
 const tickComment = '`<!-- Comment with variable ${myclass} -->`';
 /* eslint-enable no-template-curly-in-string */
 
@@ -83,6 +90,33 @@ html${tickSpan2};`,
 			'lit-html': ['html']
 		},
 		htmlMinifier: defaultHtmlMin
+	}
+}));
+
+test('templated style attribute', t => babelTest(t, {
+	source: `import {html} from 'lit-html';
+html${tickSpan3};`,
+	result: `import{html}from'lit-html';html${tickSpan3Trimmed};`,
+	pluginOptions: {
+		modules: {
+			'lit-html': ['html']
+		},
+		htmlMinifier: defaultHtmlMin
+	}
+}));
+
+test('templated event attribute', t => babelTest(t, {
+	source: `import {html} from 'lit-html';
+html${tickSpan4};`,
+	result: `import{html}from'lit-html';html${tickSpan4Trimmed};`,
+	pluginOptions: {
+		modules: {
+			'lit-html': ['html']
+		},
+		htmlMinifier: {
+			...defaultHtmlMin,
+			removeAttributeQuotes: true
+		}
 	}
 }));
 

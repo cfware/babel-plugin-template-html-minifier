@@ -64,7 +64,7 @@ module.exports = babel => {
 			do {
 				id = Math.random().toString(36).replace(/^0\.\d*/, '');
 			} while (value.indexOf(id) !== -1);
-			return '${' + id + ' }';
+			return 'babel-plugin-template-html-minifier:' + id;
 		}
 
 		const {node} = template;
