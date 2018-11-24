@@ -68,7 +68,7 @@ module.exports = babel => {
 		}
 
 		const {node} = template;
-		const quasis = node.quasis.map(quasi => quasi.value.cooked);
+		const quasis = node.quasis.map(quasi => quasi.value.raw);
 
 		const placeholder = uniqueId(quasis.join(''));
 		const parts = htmlMinifier
@@ -77,9 +77,8 @@ module.exports = babel => {
 		if (parts.length !== quasis.length) {
 			throw new Error(majorDeleteError);
 		}
-		parts.forEach((value, i) => {
-			const args = {cooked: value, raw: value};
-			template.get('quasis')[i].replaceWith(t.templateElement(args, i === parts.length - 1));
+		parts.forEach((raw, i) => {
+			template.get('quasis')[i].replaceWith(t.templateElement({raw}, i === parts.length - 1));
 		});
 	}
 
