@@ -535,3 +535,14 @@ test('ignore this outside class', t => babelTest(t, {
 	pluginOptions: {
 	}
 }));
+
+test('css unicode with double-backslash', t => babelTest(t, {
+	source: 'import{html}from"lit-html";html`<style>div::before{content:"\\2003"}</style><div></div>`;',
+	result: 'import{html}from"lit-html";html`<style>div::before{content:"\\2003"}</style><div></div>`;',
+	pluginOptions: {
+		modules: {
+			'lit-html': ['html']
+		},
+		htmlMinifier: defaultHtmlMin
+	}
+}));
