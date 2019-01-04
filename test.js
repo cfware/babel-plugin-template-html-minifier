@@ -66,6 +66,19 @@ html${tickSpan};`,
 	}
 }));
 
+test('ignore copy', t => babelTest(t, {
+	source: `import {html} from 'lit-html';
+const noMin = html;
+noMin${tickSpan};`,
+	result: `import{html}from'lit-html';const noMin=html;noMin${tickSpan};`,
+	pluginOptions: {
+		modules: {
+			'lit-html': ['html']
+		},
+		htmlMinifier: defaultHtmlMin
+	}
+}));
+
 test('import *', t => babelTest(t, {
 	source: `import * as lit from 'lit-html';
 lit.html${tickSpan};
