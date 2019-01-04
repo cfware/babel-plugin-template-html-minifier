@@ -54,6 +54,27 @@ function getModuleConfig(options, importSource) {
 	}
 }
 
+function cookRawQuasi({transform}, raw) {
+	// This nasty hack is needed until https://github.com/babel/babel/issues/9242 is resolved.
+	const args = {raw};
+
+	transform('cooked`' + args.raw + '`', {
+		babelrc: false,
+		configFile: false,
+		plugins: [
+			{
+				visitor: {
+					TaggedTemplateExpression(path) {
+						args.cooked = path.get('quasi').node.quasis[0].value.cooked;
+					}
+				}
+			}
+		]
+	});
+
+	return args;
+}
+
 const majorDeleteError = 'html-minifier deleted something major, cannot proceed.';
 module.exports = babel => {
 	const t = babel.types;
@@ -78,7 +99,8 @@ module.exports = babel => {
 			throw new Error(majorDeleteError);
 		}
 		parts.forEach((raw, i) => {
-			template.get('quasis')[i].replaceWith(t.templateElement({raw}, i === parts.length - 1));
+			const args = cookRawQuasi(babel, raw);
+			template.get('quasis')[i].replaceWith(t.templateElement(args, i === parts.length - 1));
 		});
 	}
 
