@@ -5,12 +5,12 @@ import {module as litElementMain} from '@polymer/lit-element/package';
 import plugin from '.';
 
 function babelTest(t, options) {
-	const {exception, source, result, pluginOptions} = options;
+	const {exception, source, result, pluginOptions, morePlugins} = options;
 
 	if (exception) {
-		t.throws(() => transform(source, {compact: true, plugins: [[plugin, pluginOptions]]}), exception);
+		t.throws(() => transform(source, {compact: true, plugins: [[plugin, pluginOptions], ...(morePlugins || [])]}), exception);
 	} else {
-		const {code} = transform(source, {compact: true, plugins: [[plugin, pluginOptions]]});
+		const {code} = transform(source, {compact: true, plugins: [[plugin, pluginOptions], ...(morePlugins || [])]});
 
 		t.is(code, result);
 	}
@@ -550,12 +550,33 @@ test('ignore this outside class', t => babelTest(t, {
 }));
 
 test('css unicode with double-backslash', t => babelTest(t, {
-	source: 'import{html}from"lit-html";html`<style>div::before{content:"\\2003"}</style><div></div>`;',
-	result: 'import{html}from"lit-html";html`<style>div::before{content:"\\2003"}</style><div></div>`;',
+	source: 'import{html}from"lit-html";html`<style>div::before{content:"\\\\2003"}</style><div></div>`;',
+	result: 'import{html}from"lit-html";html`<style>div::before{content:"\\\\2003"}</style><div></div>`;',
 	pluginOptions: {
 		modules: {
 			'lit-html': ['html']
 		},
 		htmlMinifier: defaultHtmlMin
 	}
+}));
+
+test('transform-template-literals after', t => babelTest(t, {
+	source: 'import{html}from"lit-html";html`<style >div::before{content:"\\\\2003"; }</style><div></div>`;',
+	result: 'function _templateObject(){const data=_taggedTemplateLiteral(' +
+			// Cooked
+			'["<style>div::before{content:\\"\\\\2003\\"}</style><div></div>"],' +
+			// Raw
+			'["<style>div::before{content:\\"\\\\\\\\2003\\"}</style><div></div>"]' +
+		');_templateObject=function(){return data;};return data;}' +
+		'function _taggedTemplateLiteral(strings,raw){if(!raw){raw=strings.slice(0);}return Object.freeze(Object.defineProperties(strings,{raw:{value:Object.freeze(raw)}}));}' +
+		'import{html}from"lit-html";html(_templateObject());',
+	pluginOptions: {
+		modules: {
+			'lit-html': ['html']
+		},
+		htmlMinifier: defaultHtmlMin
+	},
+	morePlugins: [
+		'@babel/plugin-transform-template-literals'
+	]
 }));
