@@ -23,8 +23,12 @@ In `.babelrc`:
     ["template-html-minifier", {
       "modules": {
         "lit-html": ["html"],
-        "lit-element": ["html"],
+        "lit-element": [
+          "html",
+          {"name": "css", "encapsulation": "style"}
+        ],
         "choo/html": [null],
+        "hyperhtml": [{"name": "bind", "type": "factory"}],
         "hyperhtml-element": [{"name": null, "member": "html"}]
       },
       "htmlMinifier": {
@@ -64,9 +68,10 @@ default export.
 ```js
 import choo from 'choo/html';
 import * as lit from 'lit-html';
-import {html as litHtml} from 'lit-element';
+import {html as litHtml, css} from 'lit-element';
 import HyperHTMLElement from 'hyperhtml-element';
 import html from 'some-module';
+import {bind} from 'hyperhtml';
 
 choo`
   <div class="hello">
@@ -86,6 +91,12 @@ litHtml`
   </div>
 `;
 
+css`
+  .sel {
+    background: red;
+  }
+`;
+
 class MyHyperHTMLElement extends HyperHTMLElement {
   created() {
     this.render();
@@ -100,6 +111,12 @@ class MyHyperHTMLElement extends HyperHTMLElement {
   }
 }
 
+bind(document.body)`
+  <div>
+    Hello World
+  </div>
+`;
+
 html`
   This
   is
@@ -113,15 +130,18 @@ Using the .babelrc shown in [usage](#Usage) produces the following output:
 ```js
 import choo from 'choo/html';
 import * as lit from 'lit-html';
-import {html as litHtml} from 'lit-element';
+import {html as litHtml, css} from 'lit-element';
 import HyperHTMLElement from 'hyperhtml-element';
 import html from 'some-module';
+import {bind} from 'hyperhtml';
 
 choo`<div class="hello"> Hello World </div>`;
 
 lit.html`<div class="hello"> Hello World </div>`;
 
 litHtml`<div class="hello"> Hello World </div>`;
+
+css`.sel{background:red}`;
 
 class MyHyperHTMLElement extends HyperHTMLElement {
   created() {
@@ -132,6 +152,8 @@ class MyHyperHTMLElement extends HyperHTMLElement {
     this.html`<div> Hello World </div>`;
   }
 }
+
+bind(document.body)`<div> Hello World </div>`;
 
 html`
   This
@@ -145,9 +167,14 @@ html`
 export should be processed.
 * lit.html is processed because `"lit-html": ["html"]`.
 * litHtml is processed because `"lit-element": ["html"]`.
+* css is processed because `"lit-element": [{"name": "css", "encapsulation": "style"}]`.
+  The `encapsulation` argument ensures that `html-minifier` understands that the template
+  contains CSS, without it the template would be processed as HTML.
 * `this.html` in MyHyperHTMLElement is processed because
 `"hyperhtml-element": [{"name": null, "member": "html"}]` specifies that the `html` member
 of classes which extend the default export should be processed.
+* bind is processed because of `"hyperhtml": [{"name": "bind", "type": "factory"}]`, the
+  type `factory` specifies the bind returns a function which processes the tagged templates.
 * html is not processed because it was exported from an unlisted module.
 
 All matching is done based on the exported name, not the local/imported name.
