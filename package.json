@@ -7,7 +7,7 @@
 		"index.js"
 	],
 	"scripts": {
-		"test": "xo && nyc ava"
+		"test": "xo && nyc ava -v"
 	},
 	"repository": {
 		"type": "git",
@@ -30,13 +30,36 @@
 		"is-builtin-module": "^3.0.0"
 	},
 	"devDependencies": {
-		"@babel/core": "^7.1.6",
+		"@babel/core": "^7.2.2",
 		"@babel/plugin-transform-template-literals": "^7.2.0",
-		"@polymer/lit-element": "^0.6.3",
-		"ava": "^1.0.0-beta.8",
-		"hyperhtml-element": "^3.1.0",
-		"lit-html": "^0.13.0",
+		"ava": "^1.1.0",
+		"choo": "^6.13.1",
+		"hyperhtml-element": "^3.5.0",
+		"lit-element": "^2.0.0-rc.2",
+		"lit-html": "^1.0.0-rc.2",
 		"nyc": "^13.1.0",
-		"xo": "^0.23.0"
+		"pify": "^4.0.1",
+		"xo": "^0.24.0"
+	},
+	"xo": {
+		"ignores": [
+			"test/fixtures/ignore-invalid-require-source.js",
+			"test/fixtures/transform-template-literals-after.js"
+		],
+		"overrides": [
+			{
+				"files": [
+					"test/fixtures/**"
+				],
+				"rules": {
+					"no-unused-expressions": [
+						"error",
+						{
+							"allowTaggedTemplates": true
+						}
+					]
+				}
+			}
+		]
 	}
 }

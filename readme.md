@@ -23,7 +23,7 @@ In `.babelrc`:
     ["template-html-minifier", {
       "modules": {
         "lit-html": ["html"],
-        "@polymer/lit-element": ["html"],
+        "lit-element": ["html"],
         "choo/html": [null],
         "hyperhtml-element": [{"name": null, "member": "html"}]
       },
@@ -64,7 +64,7 @@ default export.
 ```js
 import choo from 'choo/html';
 import * as lit from 'lit-html';
-import {html as litHtml} from '@polymer/lit-element';
+import {html as litHtml} from 'lit-element';
 import HyperHTMLElement from 'hyperhtml-element';
 import html from 'some-module';
 
@@ -113,7 +113,7 @@ Using the .babelrc shown in [usage](#Usage) produces the following output:
 ```js
 import choo from 'choo/html';
 import * as lit from 'lit-html';
-import {html as litHtml} from '@polymer/lit-element';
+import {html as litHtml} from 'lit-element';
 import HyperHTMLElement from 'hyperhtml-element';
 import html from 'some-module';
 
@@ -144,7 +144,7 @@ html`
 * choo is processed because of `"choo/html": [null]` specifies that the default
 export should be processed.
 * lit.html is processed because `"lit-html": ["html"]`.
-* litHtml is processed because `"@polymer/lit-element": ["html"]`.
+* litHtml is processed because `"lit-element": ["html"]`.
 * `this.html` in MyHyperHTMLElement is processed because
 `"hyperhtml-element": [{"name": null, "member": "html"}]` specifies that the `html` member
 of classes which extend the default export should be processed.
