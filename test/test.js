@@ -54,6 +54,17 @@ const namedHyperConfig = {
 	},
 	htmlMinifier
 };
+const factoryHyperConfig = {
+	modules: {
+		'hyperhtml-element': [
+			{
+				name: 'bind',
+				type: 'factory'
+			}
+		]
+	},
+	htmlMinifier
+};
 const wrongHyperConfig = {
 	modules: {
 		'hyperhtml-element': [
@@ -230,3 +241,5 @@ test('import member class of star export from non-matching module', fileTest, 'i
 test('ignore this outside class', fileTest, null, true);
 test('css unicode with double-backslash', fileTest);
 test('transform-template-literals after', fileTest, 'lit-html', null, null, '@babel/plugin-transform-template-literals');
+test('tagged template non-factory', fileTest);
+test('tagged template factory', fileTest, null, null, factoryHyperConfig);

@@ -304,9 +304,24 @@ module.exports = babel => {
 					if (bindings.length === 1) {
 						minify(path.get('quasi'), this.opts.htmlMinifier, bindings[0].options.filter(optionsFilter));
 					}
-				} else if (tag.isIdentifier()) {
+
+					return;
+				}
+
+				if (tag.isIdentifier()) {
 					const binding = path.scope.getBinding(tag.node.name);
 					const bindings = this.bindings.filter(item => item.binding === binding && item.star === false && item.options.type === 'basic');
+					if (bindings.length === 1) {
+						minify(path.get('quasi'), this.opts.htmlMinifier, bindings[0].options);
+					}
+
+					return;
+				}
+
+				/* istanbul ignore else */
+				if (tag.isCallExpression()) {
+					const binding = path.scope.getBinding(tag.node.callee.name);
+					const bindings = this.bindings.filter(item => item.binding === binding && item.star === false && item.options.type === 'factory');
 					if (bindings.length === 1) {
 						minify(path.get('quasi'), this.opts.htmlMinifier, bindings[0].options);
 					}
