@@ -38,9 +38,58 @@ function bareName(importSource) {
 	return importSource;
 }
 
-function getModuleConfig(options, importSource) {
+function normalizeExportConfig(settings) {
+	if (settings === null || typeof settings === 'string') {
+		return {type: 'basic', name: settings};
+	}
+
+	const ret = Object.assign({}, settings);
+
+	if (!('type' in ret)) {
+		if ('member' in ret) {
+			ret.type = 'member';
+		} else {
+			ret.type = 'basic';
+		}
+	}
+
+	return ret;
+}
+
+function normalizeModuleConfig(name, items) {
+	const defaultExport = items.filter(item => item.name === null);
+	const nonDefaults = items.filter(item => item.name !== null);
+	const moduleConfig = {
+		basics: nonDefaults.filter(item => item.type === 'basic'),
+		members: nonDefaults.filter(item => item.type === 'member')
+	};
+
+	const dupCheck = new Set();
+	nonDefaults.forEach(item => {
+		if (dupCheck.has(item.name)) {
+			throw new Error(`Module ${name} lists export ${item.name} multiple times.`);
+		}
+
+		dupCheck.add(item.name);
+	});
+
+	moduleConfig.count = moduleConfig.basics.length + moduleConfig.members.length;
+
+	if (defaultExport.length > 1) {
+		throw new TypeError(`Module ${name} has ${defaultExport.length} default exports`);
+	}
+
+	if (defaultExport.length === 1) {
+		moduleConfig.defaultExport = defaultExport[0];
+		moduleConfig.count++;
+	}
+
+	return moduleConfig;
+}
+
+function findModuleConfig(options, importSource) {
 	if (!options.modules || importSource[0] === '.' || importSource[0] === '/') {
-		return null;
+		return [];
 	}
 
 	if (options.modules[importSource]) {
@@ -48,9 +97,55 @@ function getModuleConfig(options, importSource) {
 	}
 
 	try {
-		return options.modules[bareName(importSource)];
+		return options.modules[bareName(importSource)] || [];
 	} catch (error) {
-		return null;
+		return [];
+	}
+}
+
+function getModuleConfig(options, importSource) {
+	const items = findModuleConfig(options, importSource).map(normalizeExportConfig);
+
+	return normalizeModuleConfig(importSource, items);
+}
+
+function setupStarImport(binding, moduleConfig) {
+	return {
+		binding,
+		properties: moduleConfig.basics.map(item => item.name),
+		namedClasses: moduleConfig.members
+	};
+}
+
+function setupDefaultExport(state, binding, moduleConfig) {
+	if (!moduleConfig.defaultExport) {
+		return false;
+	}
+
+	if (moduleConfig.defaultExport.type === 'basic') {
+		state.bindings.add(binding);
+	} else {
+		state.classes.push({
+			member: moduleConfig.defaultExport.member,
+			binding
+		});
+	}
+
+	return true;
+}
+
+function setupNamedExport(state, binding, moduleConfig, name) {
+	if (moduleConfig.basics.some(item => item.name === name)) {
+		state.bindings.add(binding);
+		return;
+	}
+
+	const members = moduleConfig.members.filter(item => item.name === name);
+	if (members.length === 1) {
+		state.classes.push({
+			member: members[0].member,
+			binding
+		});
 	}
 }
 
@@ -85,6 +180,7 @@ module.exports = babel => {
 			do {
 				id = Math.random().toString(36).replace(/^0\.\d*/, '');
 			} while (value.indexOf(id) !== -1);
+
 			return 'babel-plugin-template-html-minifier:' + id;
 		}
 
@@ -98,6 +194,7 @@ module.exports = babel => {
 		if (parts.length !== quasis.length) {
 			throw new Error(majorDeleteError);
 		}
+
 		parts.forEach((raw, i) => {
 			const args = cookRawQuasi(babel, raw);
 			template.get('quasis')[i].replaceWith(t.templateElement(args, i === parts.length - 1));
@@ -108,6 +205,14 @@ module.exports = babel => {
 		visitor: {
 			Program: {
 				enter() {
+					if (this.opts.modules) {
+						Object.keys(this.opts.modules).forEach(name => {
+							const items = this.opts.modules[name];
+							/* We're just checking for errors here. */
+							normalizeModuleConfig(name, items.map(normalizeExportConfig));
+						});
+					}
+
 					this.bindings = new Set();
 					this.classBindings = new Set();
 					this.starImports = {};
@@ -126,86 +231,43 @@ module.exports = babel => {
 						return;
 					}
 
-					const importSource = moduleName.node.value;
-					const moduleConfig = getModuleConfig(this.opts, importSource);
-					if (!moduleConfig) {
+					const moduleConfig = getModuleConfig(this.opts, moduleName.node.value);
+					if (moduleConfig.count === 0) {
 						return;
 					}
 
 					const idPath = path.parentPath.get('id');
-					const namedClasses = moduleConfig.filter(item => item !== null && typeof item === 'object' && typeof item.name === 'string');
+
 					if (idPath.isIdentifier()) {
-						const defaultClasses = moduleConfig.filter(item => item !== null && typeof item === 'object' && item.name === null);
 						const binding = path.parentPath.scope.getBinding(idPath.node.name);
-						if (moduleConfig.includes(null)) {
-							this.bindings.add(binding);
-						} else if (defaultClasses.length > 0) {
-							this.classes.push({
-								member: defaultClasses[0].member,
-								binding
-							});
-						} else {
-							this.starImports[idPath.node.name] = {
-								binding,
-								properties: moduleConfig.filter(item => typeof item === 'string'),
-								namedClasses
-							};
+
+						if (!setupDefaultExport(this, binding, moduleConfig)) {
+							this.starImports[idPath.node.name] = setupStarImport(binding, moduleConfig);
 						}
 					} else if (idPath.isObjectPattern()) {
 						idPath.node.properties.forEach(prop => {
-							const binding = path.scope.getBinding(prop.value.name);
-							if (moduleConfig.includes(prop.key.name)) {
-								this.bindings.add(binding);
-							} else if (namedClasses.some(item => item.name === prop.key.name)) {
-								this.classes.push({
-									member: namedClasses[0].member,
-									binding
-								});
-							}
+							setupNamedExport(this, path.scope.getBinding(prop.value.name), moduleConfig, prop.key.name);
 						});
 					}
 				}
 			},
 			ImportDeclaration(path) {
-				const importSource = path.node.source.value;
-				const moduleConfig = getModuleConfig(this.opts, importSource);
-
-				if (!moduleConfig) {
+				const moduleConfig = getModuleConfig(this.opts, path.node.source.value);
+				if (moduleConfig.count === 0) {
 					return;
 				}
 
-				const namedClasses = moduleConfig.filter(item => item !== null && typeof item === 'object' && typeof item.name === 'string');
 				path.get('specifiers').forEach(spec => {
 					const binding = path.scope.getBinding(spec.node.local.name);
 					if (spec.isImportNamespaceSpecifier()) {
-						this.starImports[spec.node.local.name] = {
-							binding,
-							properties: moduleConfig.filter(item => typeof item === 'string'),
-							namedClasses
-						};
+						this.starImports[spec.node.local.name] = setupStarImport(binding, moduleConfig);
 						return;
 					}
 
 					if (spec.isImportDefaultSpecifier()) {
-						const defaultClasses = moduleConfig.filter(item => item !== null && typeof item === 'object' && item.name === null);
-						if (moduleConfig.includes(null)) {
-							this.bindings.add(binding);
-						} else if (defaultClasses.length > 0) {
-							this.classes.push({
-								member: defaultClasses[0].member,
-								binding
-							});
-						}
-					} else if (moduleConfig.includes(spec.node.imported.name)) {
-						this.bindings.add(binding);
+						setupDefaultExport(this, binding, moduleConfig);
 					} else {
-						const matchingNames = namedClasses.filter(item => item.name === spec.node.imported.name);
-						if (matchingNames.length > 0) {
-							this.classes.push({
-								member: matchingNames[0].member,
-								binding
-							});
-						}
+						setupNamedExport(this, binding, moduleConfig, spec.node.imported.name);
 					}
 				});
 			},
@@ -233,6 +295,7 @@ module.exports = babel => {
 								minify(path.get('quasi'), this.opts.htmlMinifier);
 							}
 						}
+
 						return;
 					}
 
@@ -252,4 +315,5 @@ module.exports = babel => {
 		}
 	};
 };
+
 module.exports.majorDeleteError = majorDeleteError;
