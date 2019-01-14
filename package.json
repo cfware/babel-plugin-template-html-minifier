@@ -51,6 +51,10 @@
 				"files": [
 					"test/fixtures/**"
 				],
+				"envs": [
+					"browser",
+					"es6"
+				],
 				"rules": {
 					"no-unused-expressions": [
 						"error",

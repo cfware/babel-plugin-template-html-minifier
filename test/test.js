@@ -158,6 +158,20 @@ test('errors', t => {
 			removeComments: true
 		}
 	}), plugin.majorDeleteError);
+
+	const cssSource = `
+		import {css} from 'lit-element';
+		css\`.sel{background:red;}\`;
+	`;
+	t.throws(() => testOptions(cssSource, {
+		modules: {
+			'lit-element': [{
+				name: 'css',
+				encapsulation: 'style '
+			}]
+		},
+		htmlMinifier
+	}), plugin.majorDeleteError);
 });
 
 test('do nothing', fileTest, 'lit-html', true, {});
@@ -168,11 +182,12 @@ test('import star', fileTest);
 test('templated special attributes', fileTest);
 test('import of main module file', fileTest);
 test('non-main module file is ignored', fileTest, null, true);
-
-// This actually fails because css is not in a <style> tag, non-main modules *are* processed.
-test.failing('requested non-main module file is processed', fileTest, 'non-main-module-file-is-ignored', null, {
+test('requested non-main module file is processed', fileTest, 'non-main-module-file-is-ignored', null, {
 	modules: {
-		'lit-element/lib/css-tag': ['css']
+		'lit-element/lib/css-tag': [{
+			name: 'css',
+			encapsulation: 'style'
+		}]
 	},
 	htmlMinifier
 });
@@ -215,4 +230,3 @@ test('import member class of star export from non-matching module', fileTest, 'i
 test('ignore this outside class', fileTest, null, true);
 test('css unicode with double-backslash', fileTest);
 test('transform-template-literals after', fileTest, 'lit-html', null, null, '@babel/plugin-transform-template-literals');
-

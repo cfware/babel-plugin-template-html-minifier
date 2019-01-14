@@ -58,14 +58,11 @@ function normalizeExportConfig(settings) {
 
 function normalizeModuleConfig(name, items) {
 	const defaultExport = items.filter(item => item.name === null);
-	const nonDefaults = items.filter(item => item.name !== null);
-	const moduleConfig = {
-		basics: nonDefaults.filter(item => item.type === 'basic'),
-		members: nonDefaults.filter(item => item.type === 'member')
-	};
+	const namedExports = items.filter(item => item.name !== null);
+	const moduleConfig = {namedExports};
 
 	const dupCheck = new Set();
-	nonDefaults.forEach(item => {
+	namedExports.forEach(item => {
 		if (dupCheck.has(item.name)) {
 			throw new Error(`Module ${name} lists export ${item.name} multiple times.`);
 		}
@@ -73,7 +70,7 @@ function normalizeModuleConfig(name, items) {
 		dupCheck.add(item.name);
 	});
 
-	moduleConfig.count = moduleConfig.basics.length + moduleConfig.members.length;
+	moduleConfig.count = items.length;
 
 	if (defaultExport.length > 1) {
 		throw new TypeError(`Module ${name} has ${defaultExport.length} default exports`);
@@ -81,7 +78,6 @@ function normalizeModuleConfig(name, items) {
 
 	if (defaultExport.length === 1) {
 		moduleConfig.defaultExport = defaultExport[0];
-		moduleConfig.count++;
 	}
 
 	return moduleConfig;
@@ -109,46 +105,6 @@ function getModuleConfig(options, importSource) {
 	return normalizeModuleConfig(importSource, items);
 }
 
-function setupStarImport(binding, moduleConfig) {
-	return {
-		binding,
-		properties: moduleConfig.basics.map(item => item.name),
-		namedClasses: moduleConfig.members
-	};
-}
-
-function setupDefaultExport(state, binding, moduleConfig) {
-	if (!moduleConfig.defaultExport) {
-		return false;
-	}
-
-	if (moduleConfig.defaultExport.type === 'basic') {
-		state.bindings.add(binding);
-	} else {
-		state.classes.push({
-			member: moduleConfig.defaultExport.member,
-			binding
-		});
-	}
-
-	return true;
-}
-
-function setupNamedExport(state, binding, moduleConfig, name) {
-	if (moduleConfig.basics.some(item => item.name === name)) {
-		state.bindings.add(binding);
-		return;
-	}
-
-	const members = moduleConfig.members.filter(item => item.name === name);
-	if (members.length === 1) {
-		state.classes.push({
-			member: members[0].member,
-			binding
-		});
-	}
-}
-
 function cookRawQuasi({transform}, raw) {
 	// This nasty hack is needed until https://github.com/babel/babel/issues/9242 is resolved.
 	const args = {raw};
@@ -170,11 +126,44 @@ function cookRawQuasi({transform}, raw) {
 	return args;
 }
 
+function setupDefaultBindingOption(bindings, binding, moduleConfig) {
+	if (!moduleConfig.defaultExport) {
+		return false;
+	}
+
+	bindings.push({
+		binding,
+		options: moduleConfig.defaultExport,
+		star: false
+	});
+
+	return true;
+}
+
+function setupNamedBindingOption(bindings, binding, moduleConfig, name) {
+	const namedExports = moduleConfig.namedExports.filter(item => item.name === name);
+	if (namedExports.length === 1) {
+		bindings.push({
+			binding,
+			options: namedExports[0],
+			star: false
+		});
+	}
+}
+
+function setupStarBindingOption(bindings, binding, moduleConfig) {
+	bindings.push({
+		binding,
+		options: moduleConfig.namedExports,
+		star: true
+	});
+}
+
 const majorDeleteError = 'html-minifier deleted something major, cannot proceed.';
 module.exports = babel => {
 	const t = babel.types;
 
-	function minify(template, options) {
+	function minify(template, options, bindingOptions) {
 		function uniqueId(value) {
 			let id;
 			do {
@@ -188,9 +177,19 @@ module.exports = babel => {
 		const quasis = node.quasis.map(quasi => quasi.value.raw);
 
 		const placeholder = uniqueId(quasis.join(''));
-		const parts = htmlMinifier
-			.minify(quasis.join(placeholder), options)
-			.split(placeholder);
+		let openingTag = '';
+		let closingTag = '';
+		if (bindingOptions.encapsulation) {
+			openingTag = `<${bindingOptions.encapsulation}>`;
+			closingTag = `</${bindingOptions.encapsulation}>`;
+		}
+
+		const minified = htmlMinifier.minify(openingTag + quasis.join(placeholder) + closingTag, options);
+		if (!minified.startsWith(openingTag) || !minified.endsWith(closingTag)) {
+			throw new Error(majorDeleteError);
+		}
+
+		const parts = minified.slice(openingTag.length, -closingTag.length || undefined).split(placeholder);
 		if (parts.length !== quasis.length) {
 			throw new Error(majorDeleteError);
 		}
@@ -213,10 +212,7 @@ module.exports = babel => {
 						});
 					}
 
-					this.bindings = new Set();
-					this.classBindings = new Set();
-					this.starImports = {};
-					this.classes = [];
+					this.bindings = [];
 				}
 			},
 			CallExpression(path) {
@@ -241,12 +237,13 @@ module.exports = babel => {
 					if (idPath.isIdentifier()) {
 						const binding = path.parentPath.scope.getBinding(idPath.node.name);
 
-						if (!setupDefaultExport(this, binding, moduleConfig)) {
-							this.starImports[idPath.node.name] = setupStarImport(binding, moduleConfig);
+						if (!setupDefaultBindingOption(this.bindings, binding, moduleConfig)) {
+							setupStarBindingOption(this.bindings, binding, moduleConfig, idPath.node.name);
 						}
 					} else if (idPath.isObjectPattern()) {
 						idPath.node.properties.forEach(prop => {
-							setupNamedExport(this, path.scope.getBinding(prop.value.name), moduleConfig, prop.key.name);
+							const binding = path.scope.getBinding(prop.value.name);
+							setupNamedBindingOption(this.bindings, binding, moduleConfig, prop.key.name);
 						});
 					}
 				}
@@ -260,14 +257,11 @@ module.exports = babel => {
 				path.get('specifiers').forEach(spec => {
 					const binding = path.scope.getBinding(spec.node.local.name);
 					if (spec.isImportNamespaceSpecifier()) {
-						this.starImports[spec.node.local.name] = setupStarImport(binding, moduleConfig);
-						return;
-					}
-
-					if (spec.isImportDefaultSpecifier()) {
-						setupDefaultExport(this, binding, moduleConfig);
+						setupStarBindingOption(this.bindings, binding, moduleConfig, spec.node.local.name);
+					} else if (spec.isImportDefaultSpecifier()) {
+						setupDefaultBindingOption(this.bindings, binding, moduleConfig);
 					} else {
-						setupNamedExport(this, binding, moduleConfig, spec.node.imported.name);
+						setupNamedBindingOption(this.bindings, binding, moduleConfig, spec.node.imported.name);
 					}
 				});
 			},
@@ -285,14 +279,18 @@ module.exports = babel => {
 
 						const {superClass} = cls.node;
 						if (cls.get('superClass').isIdentifier()) {
-							if (this.classes.some(item => item.binding === cls.scope.getBinding(superClass.name) && item.member === propName)) {
-								minify(path.get('quasi'), this.opts.htmlMinifier);
+							const binding = cls.scope.getBinding(superClass.name);
+							const bindings = this.bindings.filter(item => item.binding === binding && item.star === false && item.options.member === propName);
+							if (bindings.length === 1) {
+								minify(path.get('quasi'), this.opts.htmlMinifier, bindings[0].options);
 							}
 						} else {
 							const objName = superClass.object.name;
-							const starImport = this.starImports[objName];
-							if (starImport && starImport.binding === path.scope.getBinding(objName) && starImport.namedClasses.some(item => item.member === propName && superClass.property.name === item.name)) {
-								minify(path.get('quasi'), this.opts.htmlMinifier);
+							const binding = path.scope.getBinding(objName);
+							const optionsFilter = opt => opt.member === propName && superClass.property.name === opt.name && opt.type === 'member';
+							const bindings = this.bindings.filter(item => item.binding === binding && item.star === true && item.options.some(optionsFilter));
+							if (bindings.length === 1) {
+								minify(path.get('quasi'), this.opts.htmlMinifier, bindings[0].options.filter(optionsFilter));
 							}
 						}
 
@@ -300,16 +298,18 @@ module.exports = babel => {
 					}
 
 					const objName = tag.node.object.name;
-					const starImport = this.starImports[objName];
-					if (starImport && starImport.binding === path.scope.getBinding(objName) && starImport.properties.includes(propName)) {
-						minify(path.get('quasi'), this.opts.htmlMinifier);
+					const binding = path.scope.getBinding(objName);
+					const optionsFilter = opt => opt.name === propName && opt.type === 'basic';
+					const bindings = this.bindings.filter(item => item.binding === binding && item.star === true && item.options.some(optionsFilter));
+					if (bindings.length === 1) {
+						minify(path.get('quasi'), this.opts.htmlMinifier, bindings[0].options.filter(optionsFilter));
 					}
-
-					return;
-				}
-
-				if (tag.isIdentifier() && this.bindings.has(path.scope.getBinding(tag.node.name))) {
-					minify(path.get('quasi'), this.opts.htmlMinifier);
+				} else if (tag.isIdentifier()) {
+					const binding = path.scope.getBinding(tag.node.name);
+					const bindings = this.bindings.filter(item => item.binding === binding && item.star === false && item.options.type === 'basic');
+					if (bindings.length === 1) {
+						minify(path.get('quasi'), this.opts.htmlMinifier, bindings[0].options);
+					}
 				}
 			}
 		}
