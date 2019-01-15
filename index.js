@@ -1,130 +1,8 @@
+'use strict';
 const htmlMinifier = require('html-minifier');
-const isBuiltinModule = require('is-builtin-module');
 
-const moduleMains = {};
-
-function ownerName(importSource) {
-	const parts = importSource.split('/', importSource[0] === '@' ? 2 : 1);
-
-	return parts.join('/');
-}
-
-function getPkgMain(importOwner) {
-	if (moduleMains[importOwner]) {
-		return moduleMains[importOwner];
-	}
-
-	const pkgInfo = require(importOwner + '/package.json');
-	/* istanbul ignore next */
-	moduleMains[importOwner] = pkgInfo.module || pkgInfo['jsnext:main'] || pkgInfo.main;
-
-	return moduleMains[importOwner];
-}
-
-function bareName(importSource) {
-	if (isBuiltinModule(importSource)) {
-		/* Don't rule out possibility that a built-in module could provide an html tag
-		 * but also avoid any additional processing of the module name. */
-		return importSource;
-	}
-
-	const importOwner = ownerName(importSource);
-	const pkgMain = getPkgMain(importOwner);
-
-	if (pkgMain && importSource === [importOwner, pkgMain].join('/')) {
-		return importOwner;
-	}
-
-	return importSource;
-}
-
-function normalizeExportConfig(settings) {
-	if (settings === null || typeof settings === 'string') {
-		return {type: 'basic', name: settings};
-	}
-
-	const ret = Object.assign({}, settings);
-
-	if (!('type' in ret)) {
-		if ('member' in ret) {
-			ret.type = 'member';
-		} else {
-			ret.type = 'basic';
-		}
-	}
-
-	return ret;
-}
-
-function normalizeModuleConfig(name, items) {
-	const defaultExport = items.filter(item => item.name === null);
-	const namedExports = items.filter(item => item.name !== null);
-	const moduleConfig = {namedExports};
-
-	const dupCheck = new Set();
-	namedExports.forEach(item => {
-		if (dupCheck.has(item.name)) {
-			throw new Error(`Module ${name} lists export ${item.name} multiple times.`);
-		}
-
-		dupCheck.add(item.name);
-	});
-
-	moduleConfig.count = items.length;
-
-	if (defaultExport.length > 1) {
-		throw new TypeError(`Module ${name} has ${defaultExport.length} default exports`);
-	}
-
-	if (defaultExport.length === 1) {
-		moduleConfig.defaultExport = defaultExport[0];
-	}
-
-	return moduleConfig;
-}
-
-function findModuleConfig(options, importSource) {
-	if (!options.modules || importSource[0] === '.' || importSource[0] === '/') {
-		return [];
-	}
-
-	if (options.modules[importSource]) {
-		return options.modules[importSource];
-	}
-
-	try {
-		return options.modules[bareName(importSource)] || [];
-	} catch (error) {
-		return [];
-	}
-}
-
-function getModuleConfig(options, importSource) {
-	const items = findModuleConfig(options, importSource).map(normalizeExportConfig);
-
-	return normalizeModuleConfig(importSource, items);
-}
-
-function cookRawQuasi({transform}, raw) {
-	// This nasty hack is needed until https://github.com/babel/babel/issues/9242 is resolved.
-	const args = {raw};
-
-	transform('cooked`' + args.raw + '`', {
-		babelrc: false,
-		configFile: false,
-		plugins: [
-			{
-				visitor: {
-					TaggedTemplateExpression(path) {
-						args.cooked = path.get('quasi').node.quasis[0].value.cooked;
-					}
-				}
-			}
-		]
-	});
-
-	return args;
-}
+const cookRawQuasi = require('./cook-raw-quasi');
+const {normalizeModulesConfig, getModuleConfig} = require('./config.js');
 
 function setupDefaultBindingOption(bindings, binding, moduleConfig) {
 	if (!moduleConfig.defaultExport) {
@@ -204,14 +82,7 @@ module.exports = babel => {
 		visitor: {
 			Program: {
 				enter() {
-					if (this.opts.modules) {
-						Object.keys(this.opts.modules).forEach(name => {
-							const items = this.opts.modules[name];
-							/* We're just checking for errors here. */
-							normalizeModuleConfig(name, items.map(normalizeExportConfig));
-						});
-					}
-
+					this.moduleConfigs = normalizeModulesConfig(this.opts.modules);
 					this.bindings = [];
 				}
 			},
@@ -227,7 +98,7 @@ module.exports = babel => {
 						return;
 					}
 
-					const moduleConfig = getModuleConfig(this.opts, moduleName.node.value);
+					const moduleConfig = getModuleConfig(this.moduleConfigs, moduleName.node.value);
 					if (moduleConfig.count === 0) {
 						return;
 					}
@@ -249,7 +120,7 @@ module.exports = babel => {
 				}
 			},
 			ImportDeclaration(path) {
-				const moduleConfig = getModuleConfig(this.opts, path.node.source.value);
+				const moduleConfig = getModuleConfig(this.moduleConfigs, path.node.source.value);
 				if (moduleConfig.count === 0) {
 					return;
 				}
