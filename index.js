@@ -37,86 +37,110 @@ function setupStarBindingOption(bindings, binding, moduleConfig) {
 	});
 }
 
-const majorDeleteError = 'html-minifier deleted something major, cannot proceed.';
-module.exports = babel => {
-	const t = babel.types;
+function uniqueId(value) {
+	let id;
+	do {
+		id = Math.random().toString(36).replace(/^0\.\d*/, '');
+	} while (value.indexOf(id) !== -1);
 
-	function minify(template, options, bindingOptions) {
-		function uniqueId(value) {
-			let id;
-			do {
-				id = Math.random().toString(36).replace(/^0\.\d*/, '');
-			} while (value.indexOf(id) !== -1);
+	return 'babel-plugin-template-html-minifier:' + id;
+}
 
-			return 'babel-plugin-template-html-minifier:' + id;
-		}
-
-		const {node} = template;
-		const quasis = node.quasis.map(quasi => quasi.value.raw);
-
-		const placeholder = uniqueId(quasis.join(''));
-		let openingTag = '';
-		let closingTag = '';
-		if (bindingOptions.encapsulation) {
-			openingTag = `<${bindingOptions.encapsulation}>`;
-			closingTag = `</${bindingOptions.encapsulation}>`;
-		}
-
-		const minified = htmlMinifier.minify(openingTag + quasis.join(placeholder) + closingTag, options);
-		if (!minified.startsWith(openingTag) || !minified.endsWith(closingTag)) {
-			throw new Error(majorDeleteError);
-		}
-
-		const parts = minified.slice(openingTag.length, -closingTag.length || undefined).split(placeholder);
-		if (parts.length !== quasis.length) {
-			throw new Error(majorDeleteError);
-		}
-
-		parts.forEach((raw, i) => {
-			const args = cookRawQuasi(babel, raw);
-			template.get('quasis')[i].replaceWith(t.templateElement(args, i === parts.length - 1));
-		});
+function encapsulationGetTags({encapsulation}) {
+	if (encapsulation) {
+		return {
+			opening: `<${encapsulation}>`,
+			closing: `</${encapsulation}>`
+		};
 	}
 
+	return {
+		opening: '',
+		closing: ''
+	};
+}
+
+function minify(path, state, bindingOptions) {
+	const template = path.get('quasi');
+	const t = state.babel.types;
+	const quasis = template.node.quasis.map(quasi => quasi.value.raw);
+
+	const placeholder = uniqueId(quasis.join(''));
+	const tags = encapsulationGetTags(bindingOptions);
+
+	const minified = htmlMinifier.minify(tags.opening + quasis.join(placeholder) + tags.closing, state.opts.htmlMinifier);
+	if (!minified.startsWith(tags.opening) || !minified.endsWith(tags.closing)) {
+		throw new Error(majorDeleteError);
+	}
+
+	const parts = minified.slice(tags.opening.length, -tags.closing.length || undefined).split(placeholder);
+	if (parts.length !== quasis.length) {
+		throw new Error(majorDeleteError);
+	}
+
+	parts.forEach((raw, i) => {
+		const args = cookRawQuasi(state.babel, raw);
+		template.get('quasis')[i].replaceWith(t.templateElement(args, i === parts.length - 1));
+	});
+}
+
+function handleStar(path, state, objName, optionsFilter) {
+	const binding = path.scope.getBinding(objName);
+	const bindings = state.bindings.filter(item => item.binding === binding && item.star === true && item.options.some(optionsFilter));
+	if (bindings.length === 1) {
+		minify(path, state, bindings[0].options.filter(optionsFilter));
+	}
+}
+
+function handleSimple(path, state, binding, itemCheck) {
+	if (typeof binding === 'string') {
+		binding = path.scope.getBinding(binding);
+	}
+
+	const bindings = state.bindings.filter(item => item.binding === binding && item.star === false && itemCheck(item));
+	if (bindings.length === 1) {
+		minify(path, state, bindings[0].options);
+	}
+}
+
+const majorDeleteError = 'html-minifier deleted something major, cannot proceed.';
+module.exports = babel => {
 	return {
 		visitor: {
 			Program: {
 				enter() {
 					this.moduleConfigs = normalizeModulesConfig(this.opts.modules);
+					this.babel = babel;
 					this.bindings = [];
 				}
 			},
 			CallExpression(path) {
-				if (!path.parentPath.isVariableDeclarator()) {
+				if (!path.parentPath.isVariableDeclarator() || !path.get('callee').isIdentifier({name: 'require'})) {
 					return;
 				}
 
-				if (path.get('callee').isIdentifier({name: 'require'})) {
-					const moduleName = path.get('arguments.0');
+				const moduleName = path.get('arguments.0');
+				if (!moduleName.isStringLiteral()) {
+					return;
+				}
 
-					if (!moduleName.isStringLiteral()) {
-						return;
+				const moduleConfig = getModuleConfig(this.moduleConfigs, moduleName.node.value);
+				if (moduleConfig.count === 0) {
+					return;
+				}
+
+				const idPath = path.parentPath.get('id');
+				if (idPath.isIdentifier()) {
+					const binding = path.parentPath.scope.getBinding(idPath.node.name);
+
+					if (!setupDefaultBindingOption(this.bindings, binding, moduleConfig)) {
+						setupStarBindingOption(this.bindings, binding, moduleConfig, idPath.node.name);
 					}
-
-					const moduleConfig = getModuleConfig(this.moduleConfigs, moduleName.node.value);
-					if (moduleConfig.count === 0) {
-						return;
-					}
-
-					const idPath = path.parentPath.get('id');
-
-					if (idPath.isIdentifier()) {
-						const binding = path.parentPath.scope.getBinding(idPath.node.name);
-
-						if (!setupDefaultBindingOption(this.bindings, binding, moduleConfig)) {
-							setupStarBindingOption(this.bindings, binding, moduleConfig, idPath.node.name);
-						}
-					} else if (idPath.isObjectPattern()) {
-						idPath.node.properties.forEach(prop => {
-							const binding = path.scope.getBinding(prop.value.name);
-							setupNamedBindingOption(this.bindings, binding, moduleConfig, prop.key.name);
-						});
-					}
+				} else if (idPath.isObjectPattern()) {
+					idPath.node.properties.forEach(prop => {
+						const binding = path.scope.getBinding(prop.value.name);
+						setupNamedBindingOption(this.bindings, binding, moduleConfig, prop.key.name);
+					});
 				}
 			},
 			ImportDeclaration(path) {
@@ -150,52 +174,30 @@ module.exports = babel => {
 
 						const {superClass} = cls.node;
 						if (cls.get('superClass').isIdentifier()) {
-							const binding = cls.scope.getBinding(superClass.name);
-							const bindings = this.bindings.filter(item => item.binding === binding && item.star === false && item.options.member === propName);
-							if (bindings.length === 1) {
-								minify(path.get('quasi'), this.opts.htmlMinifier, bindings[0].options);
-							}
-						} else {
-							const objName = superClass.object.name;
-							const binding = path.scope.getBinding(objName);
-							const optionsFilter = opt => opt.member === propName && superClass.property.name === opt.name && opt.type === 'member';
-							const bindings = this.bindings.filter(item => item.binding === binding && item.star === true && item.options.some(optionsFilter));
-							if (bindings.length === 1) {
-								minify(path.get('quasi'), this.opts.htmlMinifier, bindings[0].options.filter(optionsFilter));
-							}
+							handleSimple(path, this, cls.scope.getBinding(superClass.name), item => item.options.member === propName);
+							return;
 						}
 
+						handleStar(path, this, superClass.object.name,
+							opt => opt.member === propName && superClass.property.name === opt.name && opt.type === 'member'
+						);
 						return;
 					}
 
-					const objName = tag.node.object.name;
-					const binding = path.scope.getBinding(objName);
-					const optionsFilter = opt => opt.name === propName && opt.type === 'basic';
-					const bindings = this.bindings.filter(item => item.binding === binding && item.star === true && item.options.some(optionsFilter));
-					if (bindings.length === 1) {
-						minify(path.get('quasi'), this.opts.htmlMinifier, bindings[0].options.filter(optionsFilter));
-					}
-
+					handleStar(path, this, tag.node.object.name,
+						opt => opt.name === propName && opt.type === 'basic'
+					);
 					return;
 				}
 
 				if (tag.isIdentifier()) {
-					const binding = path.scope.getBinding(tag.node.name);
-					const bindings = this.bindings.filter(item => item.binding === binding && item.star === false && item.options.type === 'basic');
-					if (bindings.length === 1) {
-						minify(path.get('quasi'), this.opts.htmlMinifier, bindings[0].options);
-					}
-
+					handleSimple(path, this, tag.node.name, item => item.options.type === 'basic');
 					return;
 				}
 
 				/* istanbul ignore else */
 				if (tag.isCallExpression()) {
-					const binding = path.scope.getBinding(tag.node.callee.name);
-					const bindings = this.bindings.filter(item => item.binding === binding && item.star === false && item.options.type === 'factory');
-					if (bindings.length === 1) {
-						minify(path.get('quasi'), this.opts.htmlMinifier, bindings[0].options);
-					}
+					handleSimple(path, this, tag.node.callee.name, item => item.options.type === 'factory');
 				}
 			}
 		}
