@@ -103,6 +103,33 @@ function handleSimple(path, state, binding, itemCheck) {
 	}
 }
 
+function handleMember(path, state) {
+	const tag = path.get('tag');
+	const propName = tag.node.property.name;
+
+	if (tag.get('object').isThisExpression()) {
+		const cls = path.findParent(path => path.isClassDeclaration());
+		if (!cls || !cls.node.superClass) {
+			return;
+		}
+
+		const {superClass} = cls.node;
+		if (cls.get('superClass').isIdentifier()) {
+			handleSimple(path, state, cls.scope.getBinding(superClass.name),
+				item => item.options.member === propName
+			);
+		} else {
+			handleStar(path, state, superClass.object.name,
+				opt => opt.member === propName && superClass.property.name === opt.name && opt.type === 'member'
+			);
+		}
+	} else {
+		handleStar(path, state, tag.node.object.name,
+			opt => opt.name === propName && opt.type === 'basic'
+		);
+	}
+}
+
 const majorDeleteError = 'html-minifier deleted something major, cannot proceed.';
 module.exports = babel => {
 	return {
@@ -164,27 +191,7 @@ module.exports = babel => {
 				const tag = path.get('tag');
 
 				if (tag.isMemberExpression()) {
-					const propName = tag.node.property.name;
-
-					if (tag.get('object').isThisExpression()) {
-						const cls = path.findParent(path => path.isClassDeclaration());
-						if (!cls || !cls.node.superClass) {
-							return;
-						}
-
-						const {superClass} = cls.node;
-						if (cls.get('superClass').isIdentifier()) {
-							handleSimple(path, this, cls.scope.getBinding(superClass.name), item => item.options.member === propName);
-						} else {
-							handleStar(path, this, superClass.object.name,
-								opt => opt.member === propName && superClass.property.name === opt.name && opt.type === 'member'
-							);
-						}
-					} else {
-						handleStar(path, this, tag.node.object.name,
-							opt => opt.name === propName && opt.type === 'basic'
-						);
-					}
+					handleMember(path, this);
 				} else if (tag.isIdentifier()) {
 					handleSimple(path, this, tag.node.name, item => item.options.type === 'basic');
 				} else if (tag.isCallExpression()) {
