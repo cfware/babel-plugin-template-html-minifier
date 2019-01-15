@@ -243,3 +243,5 @@ test('css unicode with double-backslash', fileTest);
 test('transform-template-literals after', fileTest, 'lit-html', null, null, '@babel/plugin-transform-template-literals');
 test('tagged template non-factory', fileTest);
 test('tagged template factory', fileTest, null, null, factoryHyperConfig);
+
+test('ignore tagged non-function', fileTest, null, true);
