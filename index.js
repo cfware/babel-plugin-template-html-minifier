@@ -175,28 +175,19 @@ module.exports = babel => {
 						const {superClass} = cls.node;
 						if (cls.get('superClass').isIdentifier()) {
 							handleSimple(path, this, cls.scope.getBinding(superClass.name), item => item.options.member === propName);
-							return;
+						} else {
+							handleStar(path, this, superClass.object.name,
+								opt => opt.member === propName && superClass.property.name === opt.name && opt.type === 'member'
+							);
 						}
-
-						handleStar(path, this, superClass.object.name,
-							opt => opt.member === propName && superClass.property.name === opt.name && opt.type === 'member'
+					} else {
+						handleStar(path, this, tag.node.object.name,
+							opt => opt.name === propName && opt.type === 'basic'
 						);
-						return;
 					}
-
-					handleStar(path, this, tag.node.object.name,
-						opt => opt.name === propName && opt.type === 'basic'
-					);
-					return;
-				}
-
-				if (tag.isIdentifier()) {
+				} else if (tag.isIdentifier()) {
 					handleSimple(path, this, tag.node.name, item => item.options.type === 'basic');
-					return;
-				}
-
-				/* istanbul ignore else */
-				if (tag.isCallExpression()) {
+				} else if (tag.isCallExpression()) {
 					handleSimple(path, this, tag.node.callee.name, item => item.options.type === 'factory');
 				}
 			}
