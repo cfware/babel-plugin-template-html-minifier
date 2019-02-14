@@ -19,7 +19,7 @@
 		"choo",
 		"html-minifier"
 	],
-	"author": "",
+	"author": "Corey Farrell",
 	"license": "MIT",
 	"bugs": {
 		"url": "https://github.com/cfware/babel-plugin-template-html-minifier/issues"
