@@ -17,7 +17,8 @@
 		"babel",
 		"lit-html",
 		"choo",
-		"html-minifier"
+		"html-minifier",
+		"hyperhtml"
 	],
 	"author": "Corey Farrell",
 	"license": "MIT",
