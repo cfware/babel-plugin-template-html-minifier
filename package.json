@@ -31,14 +31,14 @@
 		"is-builtin-module": "^3.0.0"
 	},
 	"devDependencies": {
-		"@babel/core": "^7.2.2",
+		"@babel/core": "^7.3.3",
 		"@babel/plugin-transform-template-literals": "^7.2.0",
-		"ava": "^1.1.0",
+		"ava": "^1.2.1",
 		"choo": "^6.13.1",
-		"hyperhtml-element": "^3.5.0",
-		"lit-element": "^2.0.0-rc.2",
-		"lit-html": "^1.0.0-rc.2",
-		"nyc": "^13.1.0",
+		"hyperhtml-element": "^3.6.0",
+		"lit-element": "^2.0.1",
+		"lit-html": "^1.0.0",
+		"nyc": "^13.3.0",
 		"pify": "^4.0.1",
 		"xo": "^0.24.0"
 	},
