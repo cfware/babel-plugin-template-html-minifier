@@ -215,6 +215,7 @@ test('ignore calls that are not require', fileTest, null, true);
 test('ignore calls that are obj.require', fileTest, null, true);
 test('tolerate built-in modules', fileTest, null, true);
 test('ignore unknown modules', fileTest, null, true);
+test('ignore relative import', fileTest, null, true);
 
 test('require member class of default export', fileTest, 'require-hyperhtml-default', null, defaultHyperConfig);
 test('require member class of default export from non-matching module', fileTest, 'require-hyperhtml-default', true, defaultWrongMemberConfig);
