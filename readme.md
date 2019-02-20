@@ -1,5 +1,7 @@
 # babel-plugin-template-html-minifier
 
+[![Greenkeeper badge](https://badges.greenkeeper.io/cfware/babel-plugin-template-html-minifier.svg)](https://greenkeeper.io/)
+
 [![Travis CI][travis-image]][travis-url]
 [![NPM Version][npm-image]][npm-url]
 [![NPM Downloads][downloads-image]][downloads-url]
