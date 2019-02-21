@@ -1,8 +1,7 @@
 # babel-plugin-template-html-minifier
 
-[![Greenkeeper badge](https://badges.greenkeeper.io/cfware/babel-plugin-template-html-minifier.svg)](https://greenkeeper.io/)
-
 [![Travis CI][travis-image]][travis-url]
+[![Greenkeeper badge][gk-image]](https://greenkeeper.io/)
 [![NPM Version][npm-image]][npm-url]
 [![NPM Downloads][downloads-image]][downloads-url]
 [![MIT][license-image]](LICENSE)
@@ -199,7 +198,7 @@ This module was originally created by [goto-bus-stop](https://github.com/goto-bu
 [npm-url]: https://npmjs.org/package/babel-plugin-template-html-minifier
 [travis-image]: https://travis-ci.org/cfware/babel-plugin-template-html-minifier.svg?branch=master
 [travis-url]: https://travis-ci.org/cfware/babel-plugin-template-html-minifier
+[gk-image]: https://badges.greenkeeper.io/cfware/babel-plugin-template-html-minifier.svg
 [downloads-image]: https://img.shields.io/npm/dm/babel-plugin-template-html-minifier.svg
 [downloads-url]: https://npmjs.org/package/babel-plugin-template-html-minifier
 [license-image]: https://img.shields.io/npm/l/babel-plugin-template-html-minifier.svg
-
