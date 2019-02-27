@@ -7,6 +7,7 @@
 		"*.js"
 	],
 	"scripts": {
+		"release": "standard-version --sign",
 		"test": "xo && nyc ava -v"
 	},
 	"repository": {
@@ -40,6 +41,7 @@
 		"lit-html": "^1.0.0",
 		"nyc": "^13.3.0",
 		"pify": "^4.0.1",
+		"standard-version": "^5.0.0",
 		"xo": "^0.24.0"
 	},
 	"xo": {
