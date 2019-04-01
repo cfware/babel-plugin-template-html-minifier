@@ -28,7 +28,7 @@
 	},
 	"homepage": "https://github.com/cfware/babel-plugin-template-html-minifier#readme",
 	"dependencies": {
-		"html-minifier": "^3.5.21",
+		"html-minifier": "^4.0.0",
 		"is-builtin-module": "^3.0.0"
 	},
 	"devDependencies": {
