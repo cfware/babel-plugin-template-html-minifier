@@ -47,18 +47,24 @@ In `.babelrc`:
 The value of this property is passed unmodified to html-minifier. See the
 [html-minifier docs](https://github.com/kangax/html-minifier#options-quick-reference).
 
-Note `collapseBooleanAttributes` should not be used when working with `lit-html`
+<details>
+<summary>NOTE for usage with lit-html and lit-element</summary>
+
+- To preserve case sensitiveness of property binding `"caseSensitive": true` must be added.
+
+- `collapseBooleanAttributes` should not be used when working with `lit-html`
 or other templating systems which give special meaning to non-static boolean
-attributes.  Enabling `collapseBooleanAttributes` will cause this plugin to
+attributes. Enabling `collapseBooleanAttributes` will cause this plugin to
 throw an exception:
+  
+  ```js
+  html`<input readonly="${readonly}">`;
+  ```
 
-```js
-html`<input readonly="${readonly}">`;
-```
-
-This exception is for two reasons.  First because it means the chosen options have
+  This exception is for two reasons.  First because it means the chosen options have
 caused `html-minifier` to change the meaning of the HTML template.  Second because
 it deletes the point where `${readonly}` goes into the final output.
+</details>
 
 ### `modules`
 
