@@ -47,8 +47,7 @@ In `.babelrc`:
 The value of this property is passed unmodified to html-minifier. See the
 [html-minifier docs](https://github.com/kangax/html-minifier#options-quick-reference).
 
-<details>
-<summary>NOTE for usage with lit-html and lit-element</summary>
+Note for usage with `lit-html` and `lit-element`:
 
 - To preserve case sensitiveness of property binding `"caseSensitive": true` must be added.
 
@@ -64,7 +63,6 @@ throw an exception:
   This exception is for two reasons.  First because it means the chosen options have
 caused `html-minifier` to change the meaning of the HTML template.  Second because
 it deletes the point where `${readonly}` goes into the final output.
-</details>
 
 ### `modules`
 
