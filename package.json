@@ -39,7 +39,7 @@
 		"hyperhtml-element": "^3.6.0",
 		"lit-element": "^2.0.1",
 		"lit-html": "^1.0.0",
-		"nyc": "^13.3.0",
+		"nyc": "^14.0.0",
 		"pify": "^4.0.1",
 		"standard-version": "^5.0.0",
 		"xo": "^0.24.0"
