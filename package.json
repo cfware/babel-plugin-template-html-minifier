@@ -2,9 +2,9 @@
 	"name": "babel-plugin-template-html-minifier",
 	"description": "Minify HTML in tagged template strings using html-minifier",
 	"version": "2.3.0",
-	"main": "index.js",
+	"main": "lib/index.js",
 	"files": [
-		"*.js"
+		"lib/**"
 	],
 	"scripts": {
 		"release": "standard-version --sign",
@@ -34,12 +34,13 @@
 	"devDependencies": {
 		"@babel/core": "^7.3.3",
 		"@babel/plugin-transform-template-literals": "^7.2.0",
+		"@cfware/nyc": "^0.4.2",
 		"ava": "^1.2.1",
 		"choo": "^6.13.1",
 		"hyperhtml-element": "^3.6.0",
 		"lit-element": "^2.0.1",
 		"lit-html": "^1.0.0",
-		"nyc": "^14.0.0",
+		"nyc": "^14.1.0",
 		"pify": "^4.0.1",
 		"standard-version": "^5.0.0",
 		"xo": "^0.24.0"
