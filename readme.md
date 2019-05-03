@@ -55,7 +55,7 @@ Note for usage with `lit-html` and `lit-element`:
 or other templating systems which give special meaning to non-static boolean
 attributes. Enabling `collapseBooleanAttributes` will cause this plugin to
 throw an exception:
-  
+
   ```js
   html`<input readonly="${readonly}">`;
   ```
@@ -63,6 +63,21 @@ throw an exception:
   This exception is for two reasons.  First because it means the chosen options have
 caused `html-minifier` to change the meaning of the HTML template.  Second because
 it deletes the point where `${readonly}` goes into the final output.
+
+- `removeComments` will cause the following template to throw an exception:
+
+  ```js
+  html`<!-- <input value="${value}"> -->`;
+  ```
+
+  This exception is because `${value}` inside an HTML template gets deleted.  It
+should be noted that an HTML template does not prevent code within `${}` from
+running.  This means that in the following template `getValue()` is still executed
+when processing the `html` template:
+
+  ```js
+  html`<!-- <input value="${getValue()}"> -->`;
+  ```
 
 ### `modules`
 
