@@ -123,9 +123,11 @@ async function fileTest(t, sourceID, resultID, pluginOptions, ...plugins) { // e
 }
 
 test('errors', t => {
+	const filename = path.resolve('error-file.js');
 	const testOptions = (source, options) => transform(source, {
 		babelrc: false,
 		configFile: false,
+		filename,
 		compact: true,
 		plugins: [
 			[plugin, options]
@@ -148,33 +150,35 @@ test('errors', t => {
 		import {html} from 'lit-html';
 		html\`<div disabled="\${disabled}"></div>\`;
 	`;
-	t.throws(() => testOptions(brokenBoolSource, {
+	let error = t.throws(() => testOptions(brokenBoolSource, {
 		modules: {
 			'lit-html': [{name: 'html', type: 'basic'}]
 		},
 		htmlMinifier: {
 			collapseBooleanAttributes: true
 		}
-	}), plugin.majorDeleteError);
+	}), SyntaxError);
+	t.is(error.message.split(/[\r\n]+/)[0], filename + ': ' + plugin.majorDeleteError);
 
 	const brokenCommentSource = `
 		import {html} from 'lit-html';
 		html\`<div><!-- \${silly} --></div>\`;
 	`;
-	t.throws(() => testOptions(brokenCommentSource, {
+	error = t.throws(() => testOptions(brokenCommentSource, {
 		modules: {
 			'lit-html': ['html']
 		},
 		htmlMinifier: {
 			removeComments: true
 		}
-	}), plugin.majorDeleteError);
+	}), SyntaxError);
+	t.is(error.message.split(/[\r\n]+/)[0], filename + ': ' + plugin.majorDeleteError);
 
 	const cssSource = `
 		import {css} from 'lit-element';
 		css\`.sel{background:red;}\`;
 	`;
-	t.throws(() => testOptions(cssSource, {
+	error = t.throws(() => testOptions(cssSource, {
 		modules: {
 			'lit-element': [{
 				name: 'css',
@@ -182,7 +186,8 @@ test('errors', t => {
 			}]
 		},
 		htmlMinifier
-	}), plugin.majorDeleteError);
+	}), SyntaxError);
+	t.is(error.message.split(/[\r\n]+/)[0], filename + ': ' + plugin.majorDeleteError);
 });
 
 test('do nothing', fileTest, 'lit-html', true, {});
