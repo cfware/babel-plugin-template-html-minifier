@@ -35,7 +35,7 @@
 		"@babel/core": "^7.3.3",
 		"@babel/plugin-transform-template-literals": "^7.2.0",
 		"@cfware/nyc": "^0.5.0",
-		"ava": "^1.2.1",
+		"ava": "^2.0.0",
 		"choo": "^6.13.1",
 		"hyperhtml-element": "^3.6.0",
 		"lit-element": "^2.0.1",
@@ -47,13 +47,13 @@
 	},
 	"xo": {
 		"ignores": [
-			"test/fixtures/ignore-invalid-require-source.js",
-			"test/fixtures/transform-template-literals-after.js"
+			"fixtures/ignore-invalid-require-source.js",
+			"fixtures/transform-template-literals-after.js"
 		],
 		"overrides": [
 			{
 				"files": [
-					"test/fixtures/**"
+					"fixtures/**"
 				],
 				"envs": [
 					"browser",

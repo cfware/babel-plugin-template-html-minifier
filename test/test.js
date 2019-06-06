@@ -99,7 +99,7 @@ const namedWrongMemberConfig = {
 	htmlMinifier
 };
 
-const fixturePath = path.resolve(__dirname, 'fixtures');
+const fixturePath = path.resolve(__dirname, '..', 'fixtures');
 
 async function fileTest(t, sourceID, resultID, pluginOptions, ...plugins) { // eslint-disable-line max-params
 	const titleID = t.title.replace(/ /g, '-');
