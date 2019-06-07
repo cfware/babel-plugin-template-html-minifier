@@ -3,9 +3,6 @@
 	"description": "Minify HTML in tagged template strings using html-minifier",
 	"version": "3.0.0",
 	"main": "lib/index.js",
-	"files": [
-		"lib/**"
-	],
 	"scripts": {
 		"release": "standard-version --sign",
 		"test": "xo && nyc ava -v"
