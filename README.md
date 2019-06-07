@@ -79,6 +79,10 @@ when processing the `html` template:
   html`<!-- <input value="${getValue()}"> -->`;
   ```
 
+  It is recommended to use [binding-positions] from [eslint-plugin-lit] to catch this
+error.  This babel transformation can only determine that a template is broken, the
+eslint plugin will tell you which binding is invalid.
+
 ### `modules`
 
 A list of module names or import paths where tags are imported from.  The values in
@@ -221,3 +225,6 @@ This module was originally created by [goto-bus-stop](https://github.com/goto-bu
 [downloads-image]: https://img.shields.io/npm/dm/babel-plugin-template-html-minifier.svg
 [downloads-url]: https://npmjs.org/package/babel-plugin-template-html-minifier
 [license-image]: https://img.shields.io/npm/l/babel-plugin-template-html-minifier.svg
+
+[binding-positions]: https://github.com/43081j/eslint-plugin-lit/blob/master/docs/rules/binding-positions.md
+[eslint-plugin-lit]: https://github.com/43081j/eslint-plugin-lit#readme
