@@ -9,7 +9,7 @@ const htmlMinifier = {
 	collapseWhitespace: true,
 	removeComments: true,
 	removeAttributeQuotes: true,
-	minifyCSS: {level: 2},
+	minifyCSS: {level: 1},
 	minifyJS: true
 };
 
@@ -118,7 +118,6 @@ async function fileTest(t, sourceID, resultID, pluginOptions, ...plugins) { // e
 	};
 	const {code} = await transformFileAsync(sourceFile, {...babelrc, plugins});
 	const {code: result} = await transformFileAsync(resultFile, babelrc);
-
 	t.is(code, result);
 }
 
@@ -251,3 +250,23 @@ test('tagged template non-factory', fileTest);
 test('tagged template factory', fileTest, null, null, factoryHyperConfig);
 
 test('ignore tagged non-function', fileTest, null, true);
+
+test('lit partial css a', fileTest, null, null, {
+	modules: {
+		'lit-element': [{
+			name: 'css',
+			encapsulation: 'style'
+		}]
+	},
+	htmlMinifier
+});
+
+test('lit partial css b', fileTest, null, null, {
+	modules: {
+		'lit-element': [{
+			name: 'css',
+			encapsulation: 'style'
+		}]
+	},
+	htmlMinifier
+});
