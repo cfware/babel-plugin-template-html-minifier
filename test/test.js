@@ -242,6 +242,7 @@ test('import member class of named export from non-matching module', fileTest, '
 test('import member class of unwanted named export', fileTest, 'import-hyperhtml-named', true, wrongHyperConfig);
 
 test('import member class of star export', fileTest, 'import-hyperhtml-star', null, namedHyperConfig);
+test('import member class of star export with mixin', fileTest, 'import-hyperhtml-star-with-mixin', null, namedHyperConfig);
 test('import member class of star export from non-matching module', fileTest, 'import-hyperhtml-star', true, namedWrongMemberConfig);
 
 test('ignore this outside class', fileTest, null, true);
