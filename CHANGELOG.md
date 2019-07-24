@@ -2,6 +2,15 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [3.1.0](https://github.com/cfware/babel-plugin-template-html-minifier/compare/v3.0.2...v3.1.0) (2019-07-24)
+
+
+### Features
+
+* Configurable html-minifier error handling ([#34](https://github.com/cfware/babel-plugin-template-html-minifier/issues/34)) ([d1f4c06](https://github.com/cfware/babel-plugin-template-html-minifier/commit/d1f4c06))
+
+
+
 ### [3.0.2](https://github.com/cfware/babel-plugin-template-html-minifier/compare/v3.0.1...v3.0.2) (2019-07-14)
 
 
