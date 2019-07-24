@@ -25,6 +25,12 @@ const complexLitConfig = {
 	},
 	htmlMinifier
 };
+const cssLitConfig = {
+	modules: {
+		'lit-element': [{name: 'html'}, {name: 'css', encapsulation: 'style'}]
+	},
+	htmlMinifier
+};
 
 const defaultChooConfig = {
 	modules: {
@@ -292,3 +298,11 @@ test('tagged template non-factory', fileTest);
 test('tagged template factory', fileTest, null, null, factoryHyperConfig);
 
 test('ignore tagged non-function', fileTest, null, true);
+test('lit element partial css', fileTest, null, false, cssLitConfig);
+test('inline css', fileTest, null, false, defaultLitConfig);
+test('link media', fileTest, null, false, defaultLitConfig);
+test('comments', fileTest, null, false, {
+	...cssLitConfig,
+	failOnError: false,
+	logOnError: false
+});
