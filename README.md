@@ -89,6 +89,19 @@ A list of module names or import paths where tags are imported from.  The values
 the arrays refers to the export names, not the import names.  `null` refers to the
 default export.
 
+### failOnError
+
+Determines whether an error should be thrown when minification failed. defaults to true.
+
+Minification can fail when using invalid syntax or comments within bindings. Especially
+when using css with bindings minification can fail. When `failOnError` is true, this
+plugin throws an error and your build will stop from proceeding. When it is false
+the minification is canceled and the template is left unminified.
+
+### logOnError
+Determines whether failure to minify a template should be logged in case of an error.
+Defaults to true.
+
 ```js
 import choo from 'choo/html';
 import * as lit from 'lit-html';

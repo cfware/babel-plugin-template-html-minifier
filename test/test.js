@@ -122,7 +122,7 @@ async function fileTest(t, sourceID, resultID, pluginOptions, ...plugins) { // e
 	t.is(code, result);
 }
 
-test('errors', t => {
+test.serial('errors', t => {
 	const filename = path.resolve('error-file.js');
 	const testOptions = (source, options) => transform(source, {
 		babelrc: false,
@@ -188,6 +188,46 @@ test('errors', t => {
 		htmlMinifier
 	}), SyntaxError);
 	t.is(error.message.split(/[\r\n]+/)[0], filename + ': ' + plugin.majorDeleteError);
+
+	const commentedBindings = `
+		import {html} from 'lit-html';
+		const template = html\`
+			<div>\${a}</div>
+			<!-- <div>\${b}</div> -->
+		\`;
+	`;
+
+	const originalLog = console.error;
+	let loggedMessage = null;
+	console.error = msg => {
+		loggedMessage = msg;
+	};
+
+	t.notThrows(() => testOptions(commentedBindings, {
+		modules: {
+			'lit-html': ['html']
+		},
+		failOnError: false,
+		htmlMinifier
+	}));
+
+	t.truthy(loggedMessage);
+	t.true(loggedMessage.includes('html-minifier deleted something major, cannot proceed.'));
+
+	loggedMessage = null;
+
+	t.notThrows(() => testOptions(commentedBindings, {
+		modules: {
+			'lit-html': ['html']
+		},
+		failOnError: false,
+		logOnError: false,
+		htmlMinifier
+	}));
+
+	t.falsy(loggedMessage);
+
+	console.error = originalLog;
 });
 
 test('do nothing', fileTest, 'lit-html', true, {});
