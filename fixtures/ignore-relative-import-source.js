@@ -1,3 +1,3 @@
-const html = require('./local-module'); // eslint-disable-line import/no-unresolved
+const html = require('./local-module');
 
 html`<div class="test" ></div>`;
