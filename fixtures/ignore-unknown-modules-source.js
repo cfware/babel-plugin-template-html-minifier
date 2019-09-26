@@ -1,3 +1,3 @@
-const unknownModule = require('@cfware/unknown-module'); // eslint-disable-line import/no-unresolved
+const unknownModule = require('@cfware/unknown-module');
 
 unknownModule`<div class="test" ></div>`;
