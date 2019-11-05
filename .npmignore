@@ -6,3 +6,4 @@ package
 .travis.yml
 fixtures
 test
+.github
