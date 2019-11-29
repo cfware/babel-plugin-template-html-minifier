@@ -1,3 +1,4 @@
+version: ~> 1.0
 import:
   - cfware/travis-ci:node-supported.yml
   - cfware/travis-ci:os-all.yml
