@@ -301,7 +301,7 @@ test('ignore tagged non-function', fileTest, null, true);
 test('lit element partial css', fileTest, null, false, cssLitConfig);
 test('inline css', fileTest, null, false, defaultLitConfig);
 test('link media', fileTest, null, false, defaultLitConfig);
-test('comments', fileTest, null, false, {
+test('comments', fileTest, null, true, {
 	...cssLitConfig,
 	failOnError: false,
 	logOnError: false

@@ -1,6 +1,6 @@
 import {css} from 'lit-element';
 
-const xl = css`16`;
+const xl = css` 16 `;
 
 const pxXl = css`   ${xl}px   `;
 
