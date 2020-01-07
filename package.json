@@ -45,7 +45,10 @@
 	"xo": {
 		"ignores": [
 			"fixtures/ignore-invalid-require-source.js",
-			"fixtures/transform-template-literals-after.js"
+			"fixtures/transform-template-literals-after.js",
+			"fixtures/custom-minify-css-config-source.js",
+			"fixtures/custom-minify-css-config.js",
+			"fixtures/lit-element-partial-css.js"
 		],
 		"overrides": [
 			{

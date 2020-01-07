@@ -270,7 +270,7 @@ test('errors', t => {
 	t.falsy(loggedMessage);
 	loggedMessage = null;
 
-	/* logs an error if configured  */
+	/* Logs an error if configured  */
 	t.notThrows(() => testOptions(errorCSS, {
 		modules: {
 			'lit-element': [{name: 'html'}, {name: 'css', encapsulation: 'style'}]
@@ -291,7 +291,7 @@ test('errors', t => {
 		\`;
 	`;
 
-	/* does not throw on warning */
+	/* Does not throw on warning */
 	t.notThrows(() => testOptions(partialCSS, {
 		modules: {
 			'lit-element': [{name: 'html'}, {name: 'css', encapsulation: 'style'}]
@@ -304,7 +304,7 @@ test('errors', t => {
 
 	t.falsy(loggedMessage);
 
-	/* throws on warning */
+	/* Throws on warning */
 	t.throws(() => testOptions(partialCSS, {
 		modules: {
 			'lit-element': [{name: 'html'}, {name: 'css', encapsulation: 'style'}]
@@ -392,6 +392,6 @@ test('custom minify css config', fileTest, null, false, {
 	...cssLitConfig,
 	htmlMinifier: {
 		...cssLitConfig.htmlMinifier,
-		minifyCSS: { level: 0 }
+		minifyCSS: {level: 0}
 	}
 });
