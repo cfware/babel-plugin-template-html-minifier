@@ -31,6 +31,7 @@ const cssLitConfig = {
 	},
 	strictCSS: true,
 	failOnError: false,
+	logOnError: false,
 	htmlMinifier
 };
 
@@ -129,7 +130,7 @@ async function fileTest(t, sourceID, resultID, pluginOptions, ...plugins) { // e
 	t.is(code, result);
 }
 
-test('errors', t => {
+test.serial('errors', t => {
 	const filename = path.resolve('error-file.js');
 	const testOptions = (source, options) => transform(source, {
 		babelrc: false,
@@ -383,11 +384,8 @@ test('ignore tagged non-function', fileTest, null, true);
 test('lit element partial css', fileTest, null, false, cssLitConfig);
 test('inline css', fileTest, null, false, defaultLitConfig);
 test('link media', fileTest, null, false, defaultLitConfig);
-test('comments', fileTest, null, true, {
-	...cssLitConfig,
-	failOnError: false,
-	logOnError: false
-});
+test('comments', fileTest, null, true, cssLitConfig);
+
 test('custom minify css config', fileTest, null, false, {
 	...cssLitConfig,
 	htmlMinifier: {
