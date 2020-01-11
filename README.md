@@ -23,11 +23,6 @@ In `.babelrc`:
   "plugins": [
     ["template-html-minifier", {
       "modules": {
-        "lit-html": ["html"],
-        "lit-element": [
-          "html",
-          {"name": "css", "encapsulation": "style"}
-        ],
         "choo/html": [null],
         "hyperhtml": [{"name": "bind", "type": "factory"}],
         "hyperhtml-element": [{"name": null, "member": "html"}]
@@ -35,6 +30,31 @@ In `.babelrc`:
       "htmlMinifier": {
         "collapseWhitespace": true
       }
+    }]
+  ]
+}
+```
+
+Example for `lit-html` and `lit-element`:
+
+```json
+{
+  "plugins": [
+    ["template-html-minifier", {
+      "modules": {
+        "lit-html": ["html"],
+        "lit-element": [
+          "html",
+          {"name": "css", "encapsulation": "style"}
+        ],
+      },
+      "strictCSS": true,
+      "htmlMinifier": {
+        "collapseWhitespace": true,
+        "conservativeCollapse": true,
+        "removeComments": true,
+        "caseSensitive": true,
+      },
     }]
   ]
 }
@@ -83,13 +103,31 @@ when processing the `html` template:
 error.  This babel transformation can only determine that a template is broken, the
 eslint plugin will tell you which binding is invalid.
 
+### `strictCSS`
+
+Whether CSS should only be minified when it is valid CSS. This is necessary when using css templates which allow multiple strings of invalid CSS together to make a valid stylesheet. This is the case for example with `lit-element`:
+
+```js
+const unit = css`px`;
+const widthXL = 400;
+const styleSheet = css`
+  @media (${widthXL}px) {
+    .foo {
+      font-size: 16${unit};
+    }
+  }
+`;
+```
+
+Minification happens per template literal, it is only able to see the unconcatenated css literals and minify those. It will try to do the right thing, but it cannot handle every scenario. If you are using `lit-element`, and write these types of templates, you need to set `strictCSS` to true.
+
 ### `modules`
 
 A list of module names or import paths where tags are imported from.  The values in
 the arrays refers to the export names, not the import names.  `null` refers to the
 default export.
 
-### failOnError
+### `failOnError`
 
 Determines whether an error should be thrown when minification failed. defaults to true.
 
@@ -98,9 +136,9 @@ when using css with bindings minification can fail. When `failOnError` is true, 
 plugin throws an error and your build will stop from proceeding. When it is false
 the minification is canceled and the template is left unminified.
 
-### logOnError
+### `logOnError`
 Determines whether failure to minify a template should be logged in case of an error.
-Defaults to true.
+Defaults to true. This setting only takes effect when `failOnError` is false.
 
 ```js
 import choo from 'choo/html';

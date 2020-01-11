@@ -9,7 +9,7 @@ const htmlMinifier = {
 	collapseWhitespace: true,
 	removeComments: true,
 	removeAttributeQuotes: true,
-	minifyCSS: {level: 2},
+	minifyCSS: true,
 	minifyJS: true
 };
 
@@ -23,6 +23,15 @@ const complexLitConfig = {
 	modules: {
 		'lit-html': [{name: 'html'}]
 	},
+	htmlMinifier
+};
+const cssLitConfig = {
+	modules: {
+		'lit-element': [{name: 'html'}, {name: 'css', encapsulation: 'style'}]
+	},
+	strictCSS: true,
+	failOnError: false,
+	logOnError: false,
 	htmlMinifier
 };
 
@@ -118,7 +127,6 @@ async function fileTest(t, sourceID, resultID, pluginOptions, ...plugins) { // e
 	};
 	const {code} = await transformFileAsync(sourceFile, {...babelrc, plugins});
 	const {code: result} = await transformFileAsync(resultFile, babelrc);
-
 	t.is(code, result);
 }
 
@@ -213,7 +221,6 @@ test.serial('errors', t => {
 
 	t.truthy(loggedMessage);
 	t.true(loggedMessage.includes('html-minifier deleted something major, cannot proceed.'));
-
 	loggedMessage = null;
 
 	t.notThrows(() => testOptions(commentedBindings, {
@@ -226,6 +233,88 @@ test.serial('errors', t => {
 	}));
 
 	t.falsy(loggedMessage);
+	loggedMessage = null;
+
+	const errorCSS = `
+		import {css} from 'lit-element';
+		const styles = css\`
+			@import "missing.css";
+		\`;
+	`;
+
+	/* Does not throw an error if configured  */
+	t.notThrows(() => testOptions(errorCSS, {
+		modules: {
+			'lit-element': [{name: 'html'}, {name: 'css', encapsulation: 'style'}]
+		},
+		failOnError: false,
+		logOnError: false,
+		htmlMinifier
+	}));
+
+	t.falsy(loggedMessage);
+	loggedMessage = null;
+
+	/* Throws an error if configured  */
+	t.throws(() => testOptions(errorCSS, {
+		modules: {
+			'lit-element': [{name: 'html'}, {name: 'css', encapsulation: 'style'}]
+		},
+		failOnError: true,
+		logOnError: false,
+		htmlMinifier
+	}));
+
+	t.falsy(loggedMessage);
+	loggedMessage = null;
+
+	t.falsy(loggedMessage);
+	loggedMessage = null;
+
+	/* Logs an error if configured  */
+	t.notThrows(() => testOptions(errorCSS, {
+		modules: {
+			'lit-element': [{name: 'html'}, {name: 'css', encapsulation: 'style'}]
+		},
+		failOnError: false,
+		logOnError: true,
+		htmlMinifier
+	}));
+
+	t.truthy(loggedMessage);
+	t.true(loggedMessage.includes('[babel-plugin-template-html-minifier] Could not minify CSS: Ignoring local @import of "missing.css" as resource is missing.'));
+	loggedMessage = null;
+
+	const partialCSS = `
+		import {css} from 'lit-element';
+		const styles = css\`
+			px;
+		\`;
+	`;
+
+	/* Does not throw on warning */
+	t.notThrows(() => testOptions(partialCSS, {
+		modules: {
+			'lit-element': [{name: 'html'}, {name: 'css', encapsulation: 'style'}]
+		},
+		strictCSS: true,
+		failOnError: false,
+		logOnError: false,
+		htmlMinifier
+	}));
+
+	t.falsy(loggedMessage);
+
+	/* Throws on warning */
+	t.throws(() => testOptions(partialCSS, {
+		modules: {
+			'lit-element': [{name: 'html'}, {name: 'css', encapsulation: 'style'}]
+		},
+		strictCSS: true,
+		failOnError: true,
+		logOnError: false,
+		htmlMinifier
+	}));
 
 	console.error = originalLog;
 });
@@ -292,3 +381,15 @@ test('tagged template non-factory', fileTest);
 test('tagged template factory', fileTest, null, null, factoryHyperConfig);
 
 test('ignore tagged non-function', fileTest, null, true);
+test('lit element partial css', fileTest, null, false, cssLitConfig);
+test('inline css', fileTest, null, false, defaultLitConfig);
+test('link media', fileTest, null, false, defaultLitConfig);
+test('comments', fileTest, null, true, cssLitConfig);
+
+test('custom minify css config', fileTest, null, false, {
+	...cssLitConfig,
+	htmlMinifier: {
+		...cssLitConfig.htmlMinifier,
+		minifyCSS: {level: 0}
+	}
+});
