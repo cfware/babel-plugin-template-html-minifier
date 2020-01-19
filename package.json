@@ -33,7 +33,7 @@
 		"@babel/core": "^7.3.3",
 		"@babel/plugin-transform-template-literals": "^7.2.0",
 		"@cfware/nyc": "^0.6.0",
-		"ava": "^2.0.0",
+		"ava": "^3.0.0",
 		"choo": "^7.0.0",
 		"hyperhtml-element": "^3.6.0",
 		"lit-element": "^2.0.1",
