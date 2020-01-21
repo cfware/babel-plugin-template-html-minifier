@@ -1,9 +1,13 @@
-import path from 'path';
-import test from 'ava';
+'use strict';
 
-import {transform, transformFileAsync} from '@babel/core';
+const path = require('path');
+const t = require('tap');
 
-import plugin from '..';
+const {transform, transformFileAsync} = require('@babel/core');
+
+const plugin = require('..');
+
+const test = (name, helper, ...args) => t.test(name, t => helper(t, ...args));
 
 const htmlMinifier = {
 	collapseWhitespace: true,
@@ -110,8 +114,9 @@ const namedWrongMemberConfig = {
 
 const fixturePath = path.resolve(__dirname, '..', 'fixtures');
 
-async function fileTest(t, sourceID, resultID, pluginOptions, ...plugins) { // eslint-disable-line max-params
-	const titleID = t.title.replace(/ /g, '-');
+// eslint-disable-next-line max-params
+async function fileTest(t, sourceID, resultID, pluginOptions, ...plugins) {
+	const titleID = t.name.replace(/ /g, '-');
 	if (resultID === true) {
 		resultID = (sourceID || titleID) + '-source';
 	}
@@ -127,10 +132,10 @@ async function fileTest(t, sourceID, resultID, pluginOptions, ...plugins) { // e
 	};
 	const {code} = await transformFileAsync(sourceFile, {...babelrc, plugins});
 	const {code: result} = await transformFileAsync(resultFile, babelrc);
-	t.is(code, result);
+	t.equal(code, result);
 }
 
-test.serial('errors', t => {
+t.test('errors', {buffered: false}, async t => {
 	const filename = path.resolve('error-file.js');
 	const testOptions = (source, options) => transform(source, {
 		babelrc: false,
@@ -166,7 +171,7 @@ test.serial('errors', t => {
 			collapseBooleanAttributes: true
 		}
 	}), SyntaxError);
-	t.is(error.message.split(/[\r\n]+/)[0], filename + ': ' + plugin.majorDeleteError);
+	t.equal(error.message.split(/[\r\n]+/)[0], filename + ': ' + plugin.majorDeleteError);
 
 	const brokenCommentSource = `
 		import {html} from 'lit-html';
@@ -180,7 +185,7 @@ test.serial('errors', t => {
 			removeComments: true
 		}
 	}), SyntaxError);
-	t.is(error.message.split(/[\r\n]+/)[0], filename + ': ' + plugin.majorDeleteError);
+	t.equal(error.message.split(/[\r\n]+/)[0], filename + ': ' + plugin.majorDeleteError);
 
 	const cssSource = `
 		import {css} from 'lit-element';
@@ -195,7 +200,7 @@ test.serial('errors', t => {
 		},
 		htmlMinifier
 	}), SyntaxError);
-	t.is(error.message.split(/[\r\n]+/)[0], filename + ': ' + plugin.majorDeleteError);
+	t.equal(error.message.split(/[\r\n]+/)[0], filename + ': ' + plugin.majorDeleteError);
 
 	const commentedBindings = `
 		import {html} from 'lit-html';
@@ -211,7 +216,7 @@ test.serial('errors', t => {
 		loggedMessage = msg;
 	};
 
-	t.notThrows(() => testOptions(commentedBindings, {
+	t.doesNotThrow(() => testOptions(commentedBindings, {
 		modules: {
 			'lit-html': ['html']
 		},
@@ -219,11 +224,11 @@ test.serial('errors', t => {
 		htmlMinifier
 	}));
 
-	t.truthy(loggedMessage);
-	t.true(loggedMessage.includes('html-minifier deleted something major, cannot proceed.'));
+	t.ok(loggedMessage);
+	t.match(loggedMessage, /html-minifier deleted something major, cannot proceed\./);
 	loggedMessage = null;
 
-	t.notThrows(() => testOptions(commentedBindings, {
+	t.doesNotThrow(() => testOptions(commentedBindings, {
 		modules: {
 			'lit-html': ['html']
 		},
@@ -231,9 +236,7 @@ test.serial('errors', t => {
 		logOnError: false,
 		htmlMinifier
 	}));
-
-	t.falsy(loggedMessage);
-	loggedMessage = null;
+	t.equal(loggedMessage, null);
 
 	const errorCSS = `
 		import {css} from 'lit-element';
@@ -243,7 +246,7 @@ test.serial('errors', t => {
 	`;
 
 	/* Does not throw an error if configured  */
-	t.notThrows(() => testOptions(errorCSS, {
+	t.doesNotThrow(() => testOptions(errorCSS, {
 		modules: {
 			'lit-element': [{name: 'html'}, {name: 'css', encapsulation: 'style'}]
 		},
@@ -251,9 +254,7 @@ test.serial('errors', t => {
 		logOnError: false,
 		htmlMinifier
 	}));
-
-	t.falsy(loggedMessage);
-	loggedMessage = null;
+	t.equal(loggedMessage, null);
 
 	/* Throws an error if configured  */
 	t.throws(() => testOptions(errorCSS, {
@@ -264,15 +265,10 @@ test.serial('errors', t => {
 		logOnError: false,
 		htmlMinifier
 	}));
-
-	t.falsy(loggedMessage);
-	loggedMessage = null;
-
-	t.falsy(loggedMessage);
-	loggedMessage = null;
+	t.equal(loggedMessage, null);
 
 	/* Logs an error if configured  */
-	t.notThrows(() => testOptions(errorCSS, {
+	t.doesNotThrow(() => testOptions(errorCSS, {
 		modules: {
 			'lit-element': [{name: 'html'}, {name: 'css', encapsulation: 'style'}]
 		},
@@ -281,8 +277,7 @@ test.serial('errors', t => {
 		htmlMinifier
 	}));
 
-	t.truthy(loggedMessage);
-	t.true(loggedMessage.includes('[babel-plugin-template-html-minifier] Could not minify CSS: Ignoring local @import of "missing.css" as resource is missing.'));
+	t.match(loggedMessage, /\[babel-plugin-template-html-minifier\] Could not minify CSS: Ignoring local @import of "missing\.css" as resource is missing\./);
 	loggedMessage = null;
 
 	const partialCSS = `
@@ -293,7 +288,7 @@ test.serial('errors', t => {
 	`;
 
 	/* Does not throw on warning */
-	t.notThrows(() => testOptions(partialCSS, {
+	t.doesNotThrow(() => testOptions(partialCSS, {
 		modules: {
 			'lit-element': [{name: 'html'}, {name: 'css', encapsulation: 'style'}]
 		},
@@ -302,8 +297,7 @@ test.serial('errors', t => {
 		logOnError: false,
 		htmlMinifier
 	}));
-
-	t.falsy(loggedMessage);
+	t.equal(loggedMessage, null);
 
 	/* Throws on warning */
 	t.throws(() => testOptions(partialCSS, {
