@@ -2,6 +2,18 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [4.0.0](https://github.com/cfware/babel-plugin-template-html-minifier/compare/v3.1.0...v4.0.0) (2020-01-26)
+
+
+### ⚠ BREAKING CHANGES
+
+* bump requirement to node.js 10.13.0
+
+### Features
+
+* bump requirement to node.js 10.13.0 ([84755e7](https://github.com/cfware/babel-plugin-template-html-minifier/commit/84755e7210daff50abc61a5b6bddbd32e5ba2943))
+* support minifying partial css ([#35](https://github.com/cfware/babel-plugin-template-html-minifier/issues/35)) ([c1a649f](https://github.com/cfware/babel-plugin-template-html-minifier/commit/c1a649f97ccf595960d0efe219d020712d8dcd0b))
+
 ## [3.1.0](https://github.com/cfware/babel-plugin-template-html-minifier/compare/v3.0.2...v3.1.0) (2019-07-24)
 
 
