@@ -42,13 +42,16 @@
 		"lit-html": "^1.0.0",
 		"standard-version": "^7.0.0",
 		"tap": "^14.10.6",
-		"xo": "^0.26.0"
+		"xo": "^0.28.0"
 	},
 	"xo": {
 		"ignores": [
 			"fixtures/ignore-invalid-require-source.js",
 			"fixtures/transform-template-literals-after.js"
 		],
+		"rules": {
+			"unicorn/string-content": 0
+		},
 		"overrides": [
 			{
 				"files": [

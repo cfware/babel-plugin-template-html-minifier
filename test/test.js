@@ -212,8 +212,8 @@ t.test('errors', {buffered: false}, async t => {
 
 	const originalLog = console.error;
 	let loggedMessage = null;
-	console.error = msg => {
-		loggedMessage = msg;
+	console.error = message => {
+		loggedMessage = message;
 	};
 
 	t.doesNotThrow(() => testOptions(commentedBindings, {
@@ -277,7 +277,7 @@ t.test('errors', {buffered: false}, async t => {
 		htmlMinifier
 	}));
 
-	t.match(loggedMessage, /\[babel-plugin-template-html-minifier\] Could not minify CSS: Ignoring local @import of "missing\.css" as resource is missing\./);
+	t.match(loggedMessage, /\[babel-plugin-template-html-minifier] Could not minify CSS: Ignoring local @import of "missing\.css" as resource is missing\./);
 	loggedMessage = null;
 
 	const partialCSS = `
