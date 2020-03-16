@@ -54,6 +54,7 @@ Example for `lit-html` and `lit-element`:
         "conservativeCollapse": true,
         "removeComments": true,
         "caseSensitive": true,
+        "minifyCSS": true
       },
     }]
   ]
