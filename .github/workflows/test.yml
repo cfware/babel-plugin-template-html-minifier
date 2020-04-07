@@ -1,0 +1,28 @@
+name: Tests
+on:
+  push:
+    branches: [master]
+  pull_request:
+    branches: [master]
+
+env:
+  CI: true
+
+jobs:
+  test:
+    strategy:
+      matrix:
+        os: [ubuntu-latest, windows-latest, macos-latest]
+        node-version: [10, 12, 13]
+    runs-on: ${{matrix.os}}
+    steps:
+    - uses: actions/checkout@v2
+    - name: Node.js ${{matrix.node-version}} on ${{matrix.os}}
+      uses: actions/setup-node@v1
+      with:
+        node-version: ${{matrix.node-version}}
+    - run: npm install
+    - name: Lint
+      run: npm run -s pretest -- --reporter stylish
+    - name: Tests
+      run: npm run -s tests-only
