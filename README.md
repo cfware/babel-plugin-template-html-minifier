@@ -6,7 +6,7 @@
 [![NPM Downloads][downloads-image]][downloads-url]
 [![MIT][license-image]](LICENSE)
 
-Minify HTML in tagged template strings using [html-minifier](https://github.com/kangax/html-minifier).
+Minify HTML in tagged template strings using [html-minifier-terser](https://github.com/DanielRuf/html-minifier-terser).
 
 ## Install
 
@@ -65,8 +65,8 @@ Example for `lit-html` and `lit-element`:
 
 ### `htmlMinifier`
 
-The value of this property is passed unmodified to html-minifier. See the
-[html-minifier docs](https://github.com/kangax/html-minifier#options-quick-reference).
+The value of this property is passed unmodified to html-minifier-terser. See the
+[html-minifier-terser docs](https://github.com/DanielRuf/html-minifier-terser#options-quick-reference).
 
 Note for usage with `lit-html` and `lit-element`:
 
@@ -82,7 +82,7 @@ throw an exception:
   ```
 
   This exception is for two reasons.  First because it means the chosen options have
-caused `html-minifier` to change the meaning of the HTML template.  Second because
+caused `html-minifier-terser` to change the meaning of the HTML template.  Second because
 it deletes the point where `${readonly}` goes into the final output.
 
 - `removeComments` will cause the following template to throw an exception:
@@ -244,7 +244,7 @@ export should be processed.
 * lit.html is processed because `"lit-html": ["html"]`.
 * litHtml is processed because `"lit-element": ["html"]`.
 * css is processed because `"lit-element": [{"name": "css", "encapsulation": "style"}]`.
-  The `encapsulation` argument ensures that `html-minifier` understands that the template
+  The `encapsulation` argument ensures that `html-minifier-terser` understands that the template
   contains CSS, without it the template would be processed as HTML.
 * `this.html` in MyHyperHTMLElement is processed because
 `"hyperhtml-element": [{"name": null, "member": "html"}]` specifies that the `html` member
