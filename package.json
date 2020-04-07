@@ -6,7 +6,8 @@
 	"scripts": {
 		"release": "standard-version --sign",
 		"pretest": "xo",
-		"test": "tap"
+		"tests-only": "tap",
+		"test": "npm run -s tests-only"
 	},
 	"repository": {
 		"type": "git",
