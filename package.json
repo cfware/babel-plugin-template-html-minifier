@@ -31,7 +31,7 @@
 	},
 	"dependencies": {
 		"clean-css": "^4.2.1",
-		"html-minifier": "^4.0.0",
+		"html-minifier-terser": "^5.0.0",
 		"is-builtin-module": "^3.0.0"
 	},
 	"devDependencies": {

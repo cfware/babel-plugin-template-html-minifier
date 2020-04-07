@@ -225,7 +225,7 @@ t.test('errors', {buffered: false}, async t => {
 	}));
 
 	t.ok(loggedMessage);
-	t.match(loggedMessage, /html-minifier deleted something major, cannot proceed\./);
+	t.match(loggedMessage, /html-minifier-terser deleted something major, cannot proceed\./);
 	loggedMessage = null;
 
 	t.doesNotThrow(() => testOptions(commentedBindings, {
