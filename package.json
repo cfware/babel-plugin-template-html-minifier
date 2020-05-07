@@ -41,7 +41,7 @@
 		"hyperhtml-element": "^3.6.0",
 		"lit-element": "^2.0.1",
 		"lit-html": "^1.0.0",
-		"standard-version": "^7.0.0",
+		"standard-version": "^8.0.0",
 		"tap": "^14.10.6",
 		"xo": "^0.28.0"
 	},
