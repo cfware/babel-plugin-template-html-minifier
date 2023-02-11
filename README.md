@@ -46,7 +46,7 @@ Example for `lit-html` and `lit-element`:
         "lit-element": [
           "html",
           {"name": "css", "encapsulation": "style"}
-        ],
+        ]
       },
       "strictCSS": true,
       "htmlMinifier": {
@@ -55,7 +55,7 @@ Example for `lit-html` and `lit-element`:
         "removeComments": true,
         "caseSensitive": true,
         "minifyCSS": true
-      },
+      }
     }]
   ]
 }
