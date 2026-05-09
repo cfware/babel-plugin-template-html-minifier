@@ -128,6 +128,21 @@ A list of module names or import paths where tags are imported from.  The values
 the arrays refers to the export names, not the import names.  `null` refers to the
 default export.
 
+Use `"*"` as the module name to match named tags from any module, including
+re-export modules:
+
+```js
+{
+  modules: {
+    '*': ['html', {name: 'css', encapsulation: 'style'}]
+  }
+}
+```
+
+This keeps the stricter binding-based behavior for explicitly configured modules,
+but allows projects with wrapper modules to minify every `html` or `css` tag by
+name.
+
 ### `failOnError`
 
 Determines whether an error should be thrown when minification failed. defaults to true.
