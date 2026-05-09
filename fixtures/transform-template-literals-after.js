@@ -1,28 +1,12 @@
-function _templateObject2() {
-	const data = _taggedTemplateLiteral(["<span class=\"", "\" disabled=\"", "\" >test</span>"]);
-	_templateObject2 = function() {
-		return data;
-	};
-	return data;
-}
+var _templateObject, _templateObject2;
 
-function _templateObject(){
-	const data = _taggedTemplateLiteral(["<span class=", " disabled=", ">test</span>"]);
-	_templateObject = function(){
-		return data;
-	};
-	return data;
-}
-
-function _taggedTemplateLiteral(strings, raw) {
-	if (!raw) {
-		raw = strings.slice(0);
-	}
-	return Object.freeze(Object.defineProperties(strings, {raw: {value: Object.freeze(raw)}}));
+function _taggedTemplateLiteral(e, t) {
+	return t || (t = e.slice(0)), Object.freeze(Object.defineProperties(e, {raw: {value: Object.freeze(t)}}));
 }
 
 import {html, render} from 'lit-html';
 
 const myclass = 'test';
 const disabled = false;
-html(_templateObject(),myclass,disabled);render(_templateObject2(),myclass,disabled);
+html(_templateObject || (_templateObject = _taggedTemplateLiteral(["<span class=", " disabled=", ">test</span>"])), myclass, disabled);
+render(_templateObject2 || (_templateObject2 = _taggedTemplateLiteral(["<span class=\"", "\" disabled=\"", "\" >test</span>"])), myclass, disabled);

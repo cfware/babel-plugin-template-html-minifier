@@ -38,6 +38,15 @@ const cssLitConfig = {
 	logOnError: false,
 	htmlMinifier
 };
+const wildcardConfig = {
+	modules: {
+		'*': [{name: 'html'}, {name: 'css', encapsulation: 'style'}]
+	},
+	strictCSS: true,
+	failOnError: false,
+	logOnError: false,
+	htmlMinifier
+};
 
 const defaultChooConfig = {
 	modules: {
@@ -318,6 +327,8 @@ test('default import', fileTest, 'choo', null, defaultChooConfig);
 test('named import', fileTest, 'lit-html', null, complexLitConfig);
 test('ignore copy', fileTest, null, true);
 test('import star', fileTest);
+test('wildcard named import', fileTest, null, null, wildcardConfig);
+test('wildcard local tag', fileTest, null, null, wildcardConfig);
 test('templated special attributes', fileTest);
 test('import of main module file', fileTest);
 test('non-main module file is ignored', fileTest, null, true);
