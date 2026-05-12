@@ -128,6 +128,32 @@ A list of module names or import paths where tags are imported from.  The values
 the arrays refers to the export names, not the import names.  `null` refers to the
 default export.
 
+Use `"*"` as a module name to match configured named exports from any import or
+require source:
+
+```json
+{
+  "plugins": [
+    ["template-html-minifier", {
+      "modules": {
+        "*": [
+          "html",
+          {"name": "css", "encapsulation": "style"}
+        ]
+      },
+      "htmlMinifier": {
+        "collapseWhitespace": true,
+        "minifyCSS": true
+      }
+    }]
+  ]
+}
+```
+
+This is useful when `html` or `css` tags are re-exported by application-specific
+modules and matching a fixed package name would be too strict. Exact module
+entries still take precedence over the wildcard entry.
+
 ### `failOnError`
 
 Determines whether an error should be thrown when minification failed. defaults to true.
