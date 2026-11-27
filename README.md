@@ -128,6 +128,19 @@ A list of module names or import paths where tags are imported from.  The values
 the arrays refers to the export names, not the import names.  `null` refers to the
 default export.
 
+The special module name `*` can be used as a fallback for tags imported from any
+module, including modules that re-export a supported template tag:
+
+```json
+{
+  "modules": {
+    "*": ["html", {"name": "css", "encapsulation": "style"}]
+  }
+}
+```
+
+Explicitly configured module names take precedence over the `*` fallback.
+
 ### `failOnError`
 
 Determines whether an error should be thrown when minification failed. defaults to true.
